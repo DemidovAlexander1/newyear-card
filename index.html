@@ -37,6 +37,20 @@ box-shadow:0 0 40px #00eaff;color:#000;
 /* снег */
 canvas{position:fixed;inset:0;z-index:2;pointer-events:none;}
 
+/* искры */
+.spark{
+position:fixed;
+width:6px;height:6px;
+background:white;
+border-radius:50%;
+pointer-events:none;
+opacity:.8;
+animation:spark 1s forwards;
+}
+@keyframes spark{
+to{transform:translate(var(--x),var(--y)) scale(0);opacity:0;}
+}
+
 /* открытка */
 .scene{
 position:relative;z-index:5;height:100%;
@@ -61,7 +75,7 @@ flex-direction:column;
 
 .garland{
 display:flex;justify-content:space-around;
-margin-bottom:12px;
+margin-bottom:10px;
 }
 .garland span{
 width:11px;height:11px;border-radius:50%;
@@ -73,7 +87,7 @@ animation:blink 2.5s infinite alternate;
 .text{
 flex:1;
 background:rgba(0,0,0,.45);
-padding:18px 18px 14px;
+padding:18px 18px 12px;
 border-radius:22px;
 display:flex;
 flex-direction:column;
@@ -88,6 +102,15 @@ font-size:clamp(26px,6vw,38px);
 margin:0;
 font-size:clamp(15px,4vw,19px);
 line-height:1.45;
+}
+
+/* подписи */
+.footer{
+font-size:12px;
+opacity:.5;
+display:flex;
+justify-content:space-between;
+margin-top:6px;
 }
 
 /* финал */
@@ -113,6 +136,19 @@ opacity:0;z-index:40;
 position:fixed;inset:0;width:100%;height:100%;
 object-fit:cover;opacity:0;z-index:45;
 transition:opacity 3s;
+}
+
+/* кнопка */
+#restart{
+position:fixed;
+bottom:20px;right:20px;
+padding:10px 18px;
+border-radius:20px;
+border:none;
+opacity:0;
+z-index:60;
+cursor:pointer;
+background:rgba(255,255,255,.7);
 }
 </style>
 </head>
@@ -145,26 +181,30 @@ transition:opacity 3s;
 
 <video id="catVideo" src="cat.mp4" playsinline muted></video>
 
-<audio id="music" src="zitronsound-christmas-village.mp3"></audio>
-<audio id="flashSound" src="flash.mp3"></audio>
+<audio id="audio"></audio>
+<audio id="bell" src="bell.mp3"></audio>
+
+<button id="restart" onclick="location.reload()">↺ сначала</button>
 
 <script>
-const music = document.getElementById("music");
-const flashSound = document.getElementById("flashSound");
-const catVideo = document.getElementById("catVideo");
+const audio=document.getElementById("audio");
+const bell=document.getElementById("bell");
+bell.volume=0.15;
+
+let bellCount=0;
+function playBell(){
+if(bellCount<2){
+bell.currentTime=0;
+bell.play();
+bellCount++;
+}
+}
 
 /* старт */
-startBtn.onclick = ()=>{
-music.volume=0.7;
-music.play();
-
-/* ИНИЦИАЛИЗАЦИЯ ВИДЕО */
-catVideo.muted=true;
-catVideo.play().then(()=>{
-catVideo.pause();
-catVideo.currentTime=0;
-}).catch(()=>{});
-
+startBtn.onclick=()=>{
+audio.src="zitronsound-christmas-village.mp3";
+audio.volume=.7;
+audio.play();
 start.remove();
 };
 
@@ -181,7 +221,13 @@ el.innerHTML=`
 <div class="garland">
 ${[...Array(20)].map((_,n)=>`<span style="--i:${n}"></span>`).join("")}
 </div>
-<div class="text"><h1>${i}</h1><p>${t}</p></div>`;
+<div class="text">
+<h1>${i}</h1><p>${t}</p>
+<div class="footer">
+<span>декабрь 2025 — январь 2026</span>
+<span>@Demidovvv124</span>
+</div>
+</div>`;
 }
 
 let idx=0,flip=false;
@@ -194,6 +240,7 @@ clearInterval(timer);
 setTimeout(finale,4000);
 return;
 }
+playBell();
 fill(flip?front:back,pages[idx]);
 card.style.transform=flip?"rotateY(0)":"rotateY(180deg)";
 flip=!flip;
@@ -206,48 +253,32 @@ setTimeout(()=>final.style.opacity=1,2000);
 
 setTimeout(()=>{
 final.style.opacity=0;
-music.pause();music.currentTime=0;
+audio.pause();
+audio.currentTime=0;
 
 whiteFlash.style.opacity=1;
+audio.src="flash.mp3";
+audio.volume=1;
+audio.play();
 
-/* флеш */
-flashSound.volume=1;
-flashSound.play();
-
-/* видео */
 catVideo.style.opacity=1;
 catVideo.play();
 
-/* затухание флешки */
-let f=setInterval(()=>{
-flashSound.volume=Math.max(0,flashSound.volume-0.01);
-if(flashSound.volume<=0){
-clearInterval(f);
-flashSound.pause();
-}
-},120);
-
-/* выход из белого */
 setTimeout(()=>{
-whiteFlash.style.transition="opacity 4s";
 whiteFlash.style.opacity=0;
 },900);
 
-/* звук видео */
-setTimeout(()=>{catVideo.muted=false;},400);
-let v=setInterval(()=>{
-catVideo.volume=Math.min(1,catVideo.volume+0.015);
-if(catVideo.volume>=1)clearInterval(v);
-},120);
+setTimeout(()=>{
+document.getElementById("restart").style.opacity=1;
+},6000);
 
 },5500);
 }
 
-/* снег */
+/* снег (двойной) */
 const canvas=document.getElementById("bg");
 const ctx=canvas.getContext("2d");
 const dpr=window.devicePixelRatio||1;
-
 function resize(){
 canvas.width=innerWidth*dpr;
 canvas.height=innerHeight*dpr;
@@ -255,24 +286,39 @@ canvas.style.width=innerWidth+"px";
 canvas.style.height=innerHeight+"px";
 ctx.setTransform(dpr,0,0,dpr,0,0);
 }
-resize();
-addEventListener("resize",resize);
+resize();addEventListener("resize",resize);
 
 let snow=[];
-for(let i=0;i<220;i++){
-snow.push({x:Math.random()*innerWidth,y:Math.random()*innerHeight,vy:1+Math.random()*2,size:1+Math.random()*2});
-}
-(function draw(){
+for(let i=0;i<150;i++)snow.push({x:Math.random()*innerWidth,y:Math.random()*innerHeight,vy:.5+Math.random(),s:1});
+for(let i=0;i<90;i++)snow.push({x:Math.random()*innerWidth,y:Math.random()*innerHeight,vy:1.5+Math.random()*1.5,s:2});
+
+function draw(){
 ctx.clearRect(0,0,innerWidth,innerHeight);
 snow.forEach(s=>{
 s.y+=s.vy;
 if(s.y>innerHeight){s.y=0;s.x=Math.random()*innerWidth;}
 ctx.fillStyle="rgba(255,255,255,.9)";
-ctx.fillRect(s.x,s.y,s.size,s.size);
+ctx.fillRect(s.x,s.y,s.s,s.s);
 });
 requestAnimationFrame(draw);
-})();
+}
+draw();
+
+/* искры */
+addEventListener("pointerdown",e=>{
+for(let i=0;i<12;i++){
+let s=document.createElement("div");
+s.className="spark";
+s.style.left=e.clientX+"px";
+s.style.top=e.clientY+"px";
+s.style.setProperty("--x",(Math.random()*120-60)+"px");
+s.style.setProperty("--y",(Math.random()*120-60)+"px");
+document.body.appendChild(s);
+setTimeout(()=>s.remove(),1000);
+}
+});
 </script>
 
 </body>
 </html>
+
