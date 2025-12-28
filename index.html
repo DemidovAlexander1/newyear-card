@@ -33,16 +33,16 @@ body{
 }
 
 #browserNote{
-  max-width:320px;
-  padding:14px 16px;
+  max-width:340px;
+  padding:16px 18px;
   font-size:13px;
-  line-height:1.45;
+  line-height:1.5;
   text-align:center;
   color:#e8f6ff;
   background:rgba(0,0,0,.35);
-  border-radius:16px;
+  border-radius:18px;
   backdrop-filter:blur(6px);
-  box-shadow:0 0 25px rgba(0,180,255,.15);
+  box-shadow:0 0 30px rgba(0,180,255,.18);
 }
 
 #start button{
@@ -174,7 +174,8 @@ body{
   <div id="browserNote">
     ℹ️ Для корректной работы открытки рекомендуется использовать<br>
     <b>Safari (iOS)</b> или <b>Google Chrome</b><br><br>
-    В других браузерах звук и видео могут воспроизводиться с ограничениями.
+    ⚠️ <b>Яндекс.Браузер не рекомендуется</b> — в нём звуки могут
+    воспроизводиться с задержками или не вовремя.
   </div>
   <button id="startBtn">▶ Открыть открытку</button>
 </div>
@@ -206,10 +207,9 @@ body{
 <button id="restart" onclick="location.reload()">↺ сначала</button>
 
 <audio id="music" src="zitronsound-christmas-village.mp3"></audio>
-<audio id="flashSound" src="flash.mp3"></audio>
 
 <script>
-/* SNOW */
+/* ---------- SNOW ---------- */
 const snow=document.getElementById("snow"),ctx=snow.getContext("2d");
 let W,H;
 function resize(){W=snow.width=innerWidth;H=snow.height=innerHeight;}
@@ -230,20 +230,41 @@ const flakes=[...Array(140)].map(()=>({
   requestAnimationFrame(draw);
 })();
 
-/* MEDIA UNLOCK */
+/* ---------- AUDIO CONTEXT (FLASH FIX) ---------- */
+let audioCtx, flashBuffer;
+
+async function loadFlash(){
+  const res = await fetch("flash.mp3");
+  const arr = await res.arrayBuffer();
+  flashBuffer = await audioCtx.decodeAudioData(arr);
+}
+
+function playFlash(){
+  const src = audioCtx.createBufferSource();
+  src.buffer = flashBuffer;
+  const gain = audioCtx.createGain();
+  gain.gain.value = 1;
+  src.connect(gain).connect(audioCtx.destination);
+  src.start();
+  return gain;
+}
+
+/* ---------- MEDIA ---------- */
 const music=document.getElementById("music");
-const flashSound=document.getElementById("flashSound");
 const cat=document.getElementById("cat");
 
 startBtn.onclick = async () => {
-  music.volume=0; await music.play(); music.pause(); music.currentTime=0; music.volume=.7;
-  flashSound.volume=0; await flashSound.play(); flashSound.pause(); flashSound.currentTime=0; flashSound.volume=1;
-  cat.muted=true; await cat.play(); cat.pause(); cat.currentTime=0; cat.muted=false;
-  music.play();
+  audioCtx = new (window.AudioContext||window.webkitAudioContext)();
+  await audioCtx.resume();
+  await loadFlash();
+
+  music.volume=0.7;
+  await music.play();
+
   start.remove();
 };
 
-/* CARDS */
+/* ---------- CARDS ---------- */
 const pages=[
   ["🌟","Пусть в новом году станет больше ясных дней, что придают уверенности в завтрашнем дне."],
   ["💫","Пусть желания исполняются вовремя, а решения даются легче, чем раньше."],
@@ -267,34 +288,39 @@ const timer=setInterval(()=>{
   flip=!flip;
 },7000);
 
-function fadeOut(audio,d){
-  const v=audio.volume,steps=80;let s=0;
-  const i=setInterval(()=>{
-    s++;audio.volume=v*(1-s/steps);
-    if(s>=steps){audio.pause();audio.volume=0;clearInterval(i);}
-  },d/steps);
-}
-
+/* ---------- FINAL ---------- */
 function endCards(){
   dark.style.opacity=1;
   setTimeout(()=>finalText.style.opacity=1,1500);
+
   setTimeout(()=>{
     finalText.style.opacity=0;
-    fadeOut(music,2000);
+    music.pause();
+
     white.style.opacity=1;
-    flashSound.play();
+    const flashGain = playFlash();
+
     cat.style.opacity=1;
     cat.play();
-    setTimeout(()=>white.style.opacity=0,6000);
-    fadeOut(flashSound,5000);
+
+    setTimeout(()=>{
+      white.style.opacity=0;
+      let t=0;
+      const fade=setInterval(()=>{
+        t+=0.05;
+        flashGain.gain.value=Math.max(0,1-t);
+        if(t>=1)clearInterval(fade);
+      },100);
+    },6000);
+
     let fading=false;
     cat.addEventListener("timeupdate",()=>{
       if(!fading && cat.duration-cat.currentTime<=10){
         fading=true;
         videoFade.style.opacity=1;
-        fadeOut(cat,10000);
       }
     });
+
     cat.onended=()=>{
       qr.style.opacity=1;
       setTimeout(()=>restart.style.opacity=1,2000);
@@ -305,4 +331,6 @@ function endCards(){
 
 </body>
 </html>
+
+
 
