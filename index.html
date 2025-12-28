@@ -7,12 +7,8 @@
 
 <style>
 html,body{
-margin:0;
-width:100%;
-height:100%;
-overflow:hidden;
-font-family:'Segoe UI',sans-serif;
-color:white;
+margin:0;width:100%;height:100%;overflow:hidden;
+font-family:'Segoe UI',sans-serif;color:white;
 }
 
 body{
@@ -21,137 +17,101 @@ linear-gradient(rgba(5,10,30,.65),rgba(5,10,30,.85)),
 url("bg.jpg") center/cover no-repeat fixed;
 }
 
-/* старт */
+/* ===== СТАРТ ===== */
 #start{
-position:fixed;
-inset:0;
-z-index:50;
+position:fixed;inset:0;z-index:50;
 background:
 linear-gradient(rgba(5,10,30,.6),rgba(5,10,30,.9)),
 url("bg.jpg") center/cover no-repeat;
-display:flex;
-flex-direction:column;
-justify-content:center;
-align-items:center;
+display:flex;flex-direction:column;
+justify-content:center;align-items:center;
 text-align:center;
 }
 #start button{
-font-size:22px;
-padding:18px 36px;
-border-radius:40px;
-border:none;
-cursor:pointer;
+font-size:22px;padding:18px 36px;border-radius:40px;
+border:none;cursor:pointer;
 background:radial-gradient(circle,#00eaff,#0077ff);
-box-shadow:0 0 40px #00eaff;
-color:#000;
+box-shadow:0 0 40px #00eaff;color:#000;
 }
 
-/* canvas снег */
+/* ===== СНЕГ ===== */
 canvas{
-position:fixed;
-inset:0;
-z-index:2;
+position:fixed;inset:0;z-index:2;
 pointer-events:none;
 }
 
-/* открытка */
+/* ===== ОТКРЫТКА ===== */
 .scene{
-position:relative;
-z-index:5;
-height:100%;
-display:flex;
-justify-content:center;
-align-items:center;
+position:relative;z-index:5;height:100%;
+display:flex;justify-content:center;align-items:center;
 }
-
 .card{
 width:min(92vw,760px);
 height:min(60vw,440px);
 transform-style:preserve-3d;
 transition:transform 2s ease-in-out;
 }
-
 .side{
-position:absolute;
-inset:0;
-border-radius:30px;
+position:absolute;inset:0;border-radius:30px;
 backface-visibility:hidden;
 background:linear-gradient(135deg,rgba(0,40,80,.88),rgba(0,20,50,.88));
 box-shadow:0 0 60px rgba(255,255,255,.35);
-padding:34px;
+padding:28px;
+overflow:hidden;
 }
-
 .back{transform:rotateY(180deg);}
 
 .text{
 background:rgba(0,0,0,.45);
-padding:34px;
-border-radius:24px;
-text-align:center;
+padding:22px;border-radius:22px;
+display:flex;flex-direction:column;
+justify-content:center;text-align:center;
+max-height:100%;
+}
+.text h1{
+margin:0 0 10px 0;
+font-size:clamp(26px,6vw,40px);
+}
+.text p{
+margin:0;
+font-size:clamp(15px,4vw,20px);
 line-height:1.45;
 }
 
 /* гирлянда */
 .garland{
-position:absolute;
-top:0;
-left:0;
-width:100%;
-display:flex;
-justify-content:space-around;
+position:absolute;top:0;left:0;width:100%;
+display:flex;justify-content:space-around;
 }
 .garland span{
-width:12px;
-height:12px;
-border-radius:50%;
+width:12px;height:12px;border-radius:50%;
 background:hsl(calc(var(--i)*20),100%,60%);
 animation:blink 2.5s infinite alternate;
 }
 @keyframes blink{to{opacity:.3;}}
 
-/* затемнение */
-#fade{
-position:fixed;
-inset:0;
-background:black;
-opacity:0;
-transition:opacity 3s;
-z-index:20;
-}
+/* ===== ФИНАЛ ===== */
+#fade{position:fixed;inset:0;background:black;
+opacity:0;transition:opacity 3s;z-index:20;}
 
-/* финальный текст */
 #final{
-position:fixed;
-inset:0;
-display:flex;
-justify-content:center;
-align-items:center;
-text-align:center;
-font-size:clamp(34px,7vw,66px);
-opacity:0;
-transition:opacity 1.2s;
-z-index:30;
+position:fixed;inset:0;z-index:30;
+display:flex;justify-content:center;align-items:center;
+text-align:center;font-size:clamp(32px,7vw,64px);
+opacity:0;transition:opacity 1.2s;
 text-shadow:0 0 70px gold;
 }
 
 /* флешка */
 #whiteFlash{
-position:fixed;
-inset:0;
-background:white;
-opacity:0;
-z-index:40;
+position:fixed;inset:0;background:white;
+opacity:0;z-index:40;
 }
 
 /* видео */
 #catVideo{
-position:fixed;
-inset:0;
-width:100%;
-height:100%;
-object-fit:cover;
-opacity:0;
-z-index:45;
+position:fixed;inset:0;width:100%;height:100%;
+object-fit:cover;opacity:0;z-index:45;
 transition:opacity 3s;
 }
 </style>
@@ -182,13 +142,18 @@ transition:opacity 3s;
 </div>
 
 <div id="whiteFlash"></div>
-<video id="catVideo" src="cat.mp4" playsinline></video>
+
+<video id="catVideo"
+src="cat.mp4"
+playsinline
+muted
+></video>
 
 <audio id="music" src="zitronsound-christmas-village.mp3"></audio>
 <audio id="flashSound" src="flash.mp3"></audio>
 
 <script>
-/* ===== СТАРТ ===== */
+/* ===== АУДИО РАЗРЕШЕНИЕ ===== */
 const music = document.getElementById("music");
 const flashSound = document.getElementById("flashSound");
 const catVideo = document.getElementById("catVideo");
@@ -196,109 +161,110 @@ const catVideo = document.getElementById("catVideo");
 startBtn.onclick = ()=>{
 music.volume = 0.7;
 music.play();
+
+/* заранее разрешаем звук флешки */
+flashSound.load();
+flashSound.play().then(()=>{
+flashSound.pause();
+flashSound.currentTime = 0;
+}).catch(()=>{});
+
 start.remove();
 };
 
 /* ===== ТЕКСТЫ ===== */
-const pages = [
-["🌟","Пусть в новом году в жизни станет больше ясности и спокойствия.<br>Меньше суеты, больше уверенности<br>и ощущение, что ты движешься в правильную сторону."],
-["💫","Пусть дела и цели складываются постепенно,<br>без спешки и лишнего давления,<br>но с результатом, которым действительно можно гордиться."],
+const pages=[
+["🌟","Пусть в новом году станет больше ясности и спокойствия.<br>Меньше суеты, больше уверенности<br>и ощущение, что ты идёшь своим путём."],
+["💫","Пусть дела и цели складываются постепенно,<br>без спешки и давления,<br>но с результатом, которым действительно можно гордиться."],
 ["🤍","Пусть рядом будут люди,<br>с которыми легко, надёжно и тепло,<br>и с которыми хочется делить обычные дни."],
 ["✨","Пусть в новом году будет больше простых,<br>но по-настоящему хороших моментов,<br>которые хочется сохранить в памяти."]
 ];
 
-function fill(el,[icon,text]){
-el.innerHTML = `
+function fill(el,[i,t]){
+el.innerHTML=`
 <div class="garland">
-${[...Array(20)].map((_,i)=>`<span style="--i:${i}"></span>`).join("")}
+${[...Array(20)].map((_,n)=>`<span style="--i:${n}"></span>`).join("")}
 </div>
-<div class="text">
-<h1>${icon}</h1>
-<p>${text}</p>
-</div>`;
+<div class="text"><h1>${i}</h1><p>${t}</p></div>`;
 }
 
-let idx=0, flipped=false;
-fill(front, pages[0]);
+let idx=0,flip=false;
+fill(front,pages[0]);
 
-const flipTimer = setInterval(()=>{
+const flipTimer=setInterval(()=>{
 idx++;
-if(idx >= pages.length){
+if(idx>=pages.length){
 clearInterval(flipTimer);
-setTimeout(finale, 4000);
+setTimeout(finale,4000);
 return;
 }
-let target = flipped ? front : back;
-fill(target, pages[idx]);
-card.style.transform = flipped ? "rotateY(0)" : "rotateY(180deg)";
-flipped = !flipped;
-}, 7000);
+let trg=flip?front:back;
+fill(trg,pages[idx]);
+card.style.transform=flip?"rotateY(0)":"rotateY(180deg)";
+flip=!flip;
+},7000);
 
 /* ===== ФИНАЛ ===== */
 function finale(){
-fade.style.opacity = 1;
+fade.style.opacity=1;
+setTimeout(()=>final.style.opacity=1,2000);
 
-setTimeout(()=>{ final.style.opacity = 1; }, 2000);
-
-/* флешка */
 setTimeout(()=>{
-final.style.opacity = 0;
-music.pause();
-music.currentTime = 0;
+final.style.opacity=0;
+music.pause();music.currentTime=0;
 
-whiteFlash.style.opacity = 1;
-
-flashSound.volume = 1;
+whiteFlash.style.opacity=1;
+flashSound.volume=1;
 flashSound.play();
 
-/* видео стартует под белым */
-catVideo.volume = 0;
+/* видео под флешкой */
+catVideo.muted=true;
+catVideo.volume=0;
 catVideo.play();
-catVideo.style.opacity = 1;
+catVideo.style.opacity=1;
 
 /* плавное затухание флешки */
-let ffade = setInterval(()=>{
-flashSound.volume = Math.max(0, flashSound.volume - 0.015);
-if(flashSound.volume <= 0){
+let ffade=setInterval(()=>{
+flashSound.volume=Math.max(0,flashSound.volume-0.01);
+if(flashSound.volume<=0){
 clearInterval(ffade);
 flashSound.pause();
-flashSound.currentTime = 0;
+flashSound.currentTime=0;
 }
-}, 100);
+},120);
 
-/* выход из слепоты */
+/* выход из белого */
 setTimeout(()=>{
-whiteFlash.style.transition = "opacity 4s";
-whiteFlash.style.opacity = 0;
-}, 900);
+whiteFlash.style.transition="opacity 4s";
+whiteFlash.style.opacity=0;
+},900);
 
-/* плавный рост звука видео */
-let vfade = setInterval(()=>{
-catVideo.volume = Math.min(1, catVideo.volume + 0.012);
-if(catVideo.volume >= 1) clearInterval(vfade);
-}, 120);
+/* рост звука видео */
+setTimeout(()=>{catVideo.muted=false;},400);
+let vfade=setInterval(()=>{
+catVideo.volume=Math.min(1,catVideo.volume+0.012);
+if(catVideo.volume>=1)clearInterval(vfade);
+},120);
 
-}, 5500);
+},5500);
 }
 
-/* ===== СНЕГ (исправленный) ===== */
-const canvas = document.getElementById("bg");
-const ctx = canvas.getContext("2d");
-const dpr = window.devicePixelRatio || 1;
+/* ===== СНЕГ (DPR FIX) ===== */
+const canvas=document.getElementById("bg");
+const ctx=canvas.getContext("2d");
+const dpr=window.devicePixelRatio||1;
 
 function resize(){
-canvas.width = innerWidth * dpr;
-canvas.height = innerHeight * dpr;
-canvas.style.width = innerWidth+"px";
-canvas.style.height = innerHeight+"px";
+canvas.width=innerWidth*dpr;
+canvas.height=innerHeight*dpr;
+canvas.style.width=innerWidth+"px";
+canvas.style.height=innerHeight+"px";
 ctx.setTransform(dpr,0,0,dpr,0,0);
 }
 resize();
-addEventListener("resize", resize);
+addEventListener("resize",resize);
 
 let snow=[];
-function initSnow(){
-snow=[];
 for(let i=0;i<220;i++){
 snow.push({
 x:Math.random()*innerWidth,
@@ -307,21 +273,20 @@ vy:1+Math.random()*2,
 size:1+Math.random()*2
 });
 }
-}
-initSnow();
 
-function drawSnow(){
+function draw(){
 ctx.clearRect(0,0,innerWidth,innerHeight);
 snow.forEach(s=>{
 s.y+=s.vy;
-if(s.y>innerHeight){ s.y=0; s.x=Math.random()*innerWidth; }
+if(s.y>innerHeight){s.y=0;s.x=Math.random()*innerWidth;}
 ctx.fillStyle="rgba(255,255,255,.9)";
 ctx.fillRect(s.x,s.y,s.size,s.size);
 });
-requestAnimationFrame(drawSnow);
+requestAnimationFrame(draw);
 }
-drawSnow();
+draw();
 </script>
 
 </body>
 </html>
+
