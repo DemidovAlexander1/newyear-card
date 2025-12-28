@@ -12,7 +12,6 @@ font-family:'Segoe UI',sans-serif;color:white;
 background:black;
 }
 
-/* фон */
 body{
 background:
 linear-gradient(rgba(5,10,30,.65),rgba(5,10,30,.85)),
@@ -37,7 +36,8 @@ box-shadow:0 0 40px #00eaff;color:#000;
 }
 
 /* снег */
-canvas{position:fixed;inset:0;z-index:2;pointer-events:none;}
+#bg{position:fixed;inset:0;z-index:2;pointer-events:none;}
+#fireworks{position:fixed;inset:0;z-index:46;pointer-events:none;}
 
 /* открытка */
 .scene{
@@ -82,110 +82,62 @@ flex-direction:column;
 justify-content:center;
 text-align:center;
 }
-.text h1{
-margin:0 0 10px 0;
-font-size:clamp(26px,6vw,38px);
-}
-.text p{
-margin:0;
-font-size:clamp(15px,4vw,19px);
-line-height:1.5;
-}
+.text h1{margin:0 0 10px;font-size:clamp(26px,6vw,38px);}
+.text p{margin:0;font-size:clamp(15px,4vw,19px);line-height:1.5;}
 
-/* подпись */
 .author{
 position:absolute;
-bottom:14px;
-right:18px;
+right:20px;
+bottom:16px;
 font-size:12px;
-opacity:.45;
+opacity:.4;
 }
 
-/* финал */
-#fade{
-position:fixed;inset:0;
-background:black;
-opacity:0;
-transition:opacity 3s;
-z-index:20;
-}
-
+/* затемнения */
+#fade{position:fixed;inset:0;background:black;opacity:0;transition:opacity 3s;z-index:20;}
 #final{
 position:fixed;inset:0;z-index:25;
 display:flex;justify-content:center;align-items:center;
-text-align:center;
-font-size:clamp(30px,7vw,64px);
+text-align:center;font-size:clamp(30px,7vw,64px);
 opacity:0;transition:opacity 1.2s;
 text-shadow:0 0 70px gold;
 }
-
-/* флеш */
 #whiteFlash{
 position:fixed;inset:0;background:white;
 opacity:0;z-index:30;
-transition:opacity 1s;
-}
-
-/* видео */
-#catVideo{
-position:fixed;inset:0;
-width:100%;height:100%;
-object-fit:cover;
-opacity:0;
-z-index:35;
 transition:opacity 2.5s;
 }
 
-/* затемнение видео */
+#catVideo{
+position:fixed;inset:0;width:100%;height:100%;
+object-fit:cover;opacity:0;z-index:35;
+transition:opacity 2.5s;
+}
 #videoFade{
-position:fixed;inset:0;
-background:black;
-opacity:0;
-z-index:40;
+position:fixed;inset:0;background:black;
+opacity:0;z-index:40;
 transition:opacity 4s;
 }
 
 /* QR */
 #qrBlock{
-position:fixed;
-inset:0;
-display:flex;
-flex-direction:column;
-justify-content:center;
-align-items:center;
+position:fixed;inset:0;
+display:flex;flex-direction:column;
+justify-content:center;align-items:center;
 text-align:center;
-opacity:0;
-z-index:45;
+opacity:0;z-index:45;
 transition:opacity 3s;
 background:rgba(0,0,0,.55);
 }
-#qrBlock img{
-width:220px;
-max-width:70vw;
-margin-bottom:14px;
-}
-#qrBlock a{
-color:#8fefff;
-text-decoration:none;
-margin-bottom:18px;
-}
-#qrBlock p{
-max-width:90%;
-font-size:clamp(14px,4vw,18px);
-line-height:1.5;
-}
+#qrBlock img{width:220px;max-width:70vw;margin-bottom:14px;}
+#qrBlock a{color:#8fefff;text-decoration:none;margin-bottom:18px;}
+#qrBlock p{max-width:90%;font-size:clamp(14px,4vw,18px);line-height:1.5;}
 
-/* кнопка */
 #restart{
-position:fixed;
-bottom:20px;right:20px;
-padding:10px 18px;
-border-radius:20px;
-border:none;
-opacity:0;
-z-index:60;
-cursor:pointer;
-background:rgba(255,255,255,.7);
+position:fixed;bottom:20px;right:20px;
+padding:10px 18px;border-radius:20px;
+border:none;opacity:0;z-index:60;
+cursor:pointer;background:rgba(255,255,255,.7);
 }
 </style>
 </head>
@@ -198,6 +150,7 @@ background:rgba(255,255,255,.7);
 </div>
 
 <canvas id="bg"></canvas>
+<canvas id="fireworks"></canvas>
 
 <div class="scene">
 <div class="card" id="card">
@@ -220,7 +173,7 @@ background:rgba(255,255,255,.7);
 <div id="videoFade"></div>
 
 <div id="qrBlock">
-<img src="qr.png" alt="QR Telegram">
+<img src="qr.png">
 <a href="https://t.me/Byte_squade" target="_blank">https://t.me/Byte_squade</a>
 <p>
 В новом году мне хочется пожелать нам больше живых встреч,
@@ -238,6 +191,66 @@ background:rgba(255,255,255,.7);
 <button id="restart" onclick="location.reload()">↺ сначала</button>
 
 <script>
+/* --- логика салютов --- */
+const fw = document.getElementById("fireworks");
+const fctx = fw.getContext("2d");
+function resizeFW(){fw.width=innerWidth;fw.height=innerHeight;}
+resizeFW();addEventListener("resize",resizeFW);
+
+let rockets=[],particles=[],fwActive=false;
+
+function launchRocket(){
+rockets.push({
+x:Math.random()*fw.width,
+y:fw.height+10,
+vx:(Math.random()-.5)*1.5,
+vy:-6-Math.random()*3,
+color:`hsl(${Math.random()*360},100%,60%)`
+});
+}
+
+function explode(x,y,color){
+for(let i=0;i<30;i++){
+particles.push({
+x,y,
+vx:(Math.random()-.5)*6,
+vy:(Math.random()-.5)*6,
+life:60,
+color
+});
+}
+}
+
+function drawFW(){
+if(!fwActive)return;
+fctx.clearRect(0,0,fw.width,fw.height);
+
+if(Math.random()<0.05)launchRocket();
+
+rockets.forEach((r,i)=>{
+r.x+=r.vx;r.y+=r.vy;
+fctx.fillStyle=r.color;
+fctx.fillRect(r.x,r.y,3,3);
+if(r.vy>-1){
+explode(r.x,r.y,r.color);
+rockets.splice(i,1);
+}
+});
+
+particles.forEach((p,i)=>{
+p.x+=p.vx;p.y+=p.vy;
+p.vy+=0.05;
+p.life--;
+fctx.fillStyle=p.color;
+fctx.globalAlpha=p.life/60;
+fctx.fillRect(p.x,p.y,3,3);
+if(p.life<=0)particles.splice(i,1);
+});
+fctx.globalAlpha=1;
+requestAnimationFrame(drawFW);
+}
+
+/* --- существующая логика --- */
 const music=document.getElementById("music");
 const flashSound=document.getElementById("flashSound");
 const bell=document.getElementById("bell");
@@ -250,7 +263,6 @@ music.play();
 start.remove();
 };
 
-/* страницы */
 const pages=[
 ["🌟","Пусть новый год принесёт спокойствие и ощущение внутреннего равновесия."],
 ["💫","Пусть желания находят путь к исполнению без спешки и лишнего шума."],
@@ -260,12 +272,8 @@ const pages=[
 
 function fill(el,[i,t]){
 el.innerHTML=`
-<div class="garland">
-${[...Array(20)].map((_,n)=>`<span style="--i:${n}"></span>`).join("")}
-</div>
-<div class="text">
-<h1>${i}</h1><p>${t}</p>
-</div>
+<div class="garland">${[...Array(20)].map((_,n)=>`<span style="--i:${n}"></span>`).join("")}</div>
+<div class="text"><h1>${i}</h1><p>${t}</p></div>
 <div class="author">@Demidovvv124</div>`;
 }
 
@@ -280,9 +288,7 @@ setTimeout(finale,4000);
 return;
 }
 if(bellCount<2){
-bell.currentTime=0;
-bell.play();
-bellCount++;
+bell.currentTime=0;bell.play();bellCount++;
 }
 fill(flip?front:back,pages[idx]);
 card.style.transform=flip?"rotateY(0)":"rotateY(180deg)";
@@ -296,50 +302,37 @@ setTimeout(()=>final.style.opacity=1,2000);
 setTimeout(()=>{
 final.style.opacity=0;
 music.pause();
-
 card.style.opacity=0;
 
 whiteFlash.style.opacity=1;
-flashSound.volume=1;
 flashSound.play();
 
 catVideo.style.opacity=1;
-catVideo.volume=1;
 catVideo.play();
 
-setTimeout(()=>{
-whiteFlash.style.opacity=0;
-},900);
-
-setTimeout(()=>{
-videoFade.style.opacity=1;
-},9000);
-
+setTimeout(()=>whiteFlash.style.opacity=0,3000);
+setTimeout(()=>videoFade.style.opacity=1,12000);
 setTimeout(()=>{
 qrBlock.style.opacity=1;
-},11000);
-
-setTimeout(()=>{
-restart.style.opacity=1;
-},15000);
+fwActive=true;
+drawFW();
+},13500);
+setTimeout(()=>restart.style.opacity=1,17000);
 
 },5500);
 }
 
 /* снег */
-const canvas=document.getElementById("bg");
-const ctx=canvas.getContext("2d");
-function resize(){
-canvas.width=innerWidth;
-canvas.height=innerHeight;
-}
-resize();addEventListener("resize",resize);
+const bg=document.getElementById("bg");
+const ctx=bg.getContext("2d");
+function resizeBG(){bg.width=innerWidth;bg.height=innerHeight;}
+resizeBG();addEventListener("resize",resizeBG);
 
 let snow=[];
 for(let i=0;i<160;i++)snow.push({x:Math.random()*innerWidth,y:Math.random()*innerHeight,vy:.4+Math.random(),s:1});
 for(let i=0;i<90;i++)snow.push({x:Math.random()*innerWidth,y:Math.random()*innerHeight,vy:1.2+Math.random()*1.2,s:2});
 
-function draw(){
+function drawSnow(){
 ctx.clearRect(0,0,innerWidth,innerHeight);
 snow.forEach(s=>{
 s.y+=s.vy;
@@ -347,12 +340,13 @@ if(s.y>innerHeight){s.y=0;s.x=Math.random()*innerWidth;}
 ctx.fillStyle="rgba(255,255,255,.9)";
 ctx.fillRect(s.x,s.y,s.s,s.s);
 });
-requestAnimationFrame(draw);
+requestAnimationFrame(drawSnow);
 }
-draw();
+drawSnow();
 </script>
 
 </body>
 </html>
+
 
 
