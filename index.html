@@ -233,15 +233,17 @@ function fwResize(){fw.width=innerWidth;fw.height=innerHeight;}
 fwResize();addEventListener("resize",fwResize);
 
 let fireworks=[];
+let fireworksInterval=null;
+
 function spawnFirework(){
   const x=Math.random()*fw.width;
-  const y=fw.height;
+  const y=fw.height+10;
   const c=`hsl(${Math.random()*360},100%,60%)`;
-  for(let i=0;i<40;i++){
+  for(let i=0;i<45;i++){
     fireworks.push({
       x,y,
-      vx:(Math.random()-.5)*5,
-      vy:-(Math.random()*5+3),
+      vx:(Math.random()-.5)*4,
+      vy:-(Math.random()*6+4),
       a:1,c
     });
   }
@@ -249,7 +251,9 @@ function spawnFirework(){
 function drawFireworks(){
   fctx.clearRect(0,0,fw.width,fw.height);
   fireworks.forEach(p=>{
-    p.x+=p.vx;p.y+=p.vy;p.vy+=0.05;p.a-=0.01;
+    p.x+=p.vx;p.y+=p.vy;
+    p.vy+=0.04;
+    p.a-=0.012;
     fctx.fillStyle=p.c;
     fctx.globalAlpha=p.a;
     fctx.fillRect(p.x,p.y,2,2);
@@ -336,8 +340,6 @@ function endCards(){
       },100);
     },6500);
 
-    setInterval(spawnFirework,900);
-
     let fading=false;
     cat.addEventListener("timeupdate",()=>{
       if(!fading && cat.duration-cat.currentTime<=10){
@@ -348,6 +350,7 @@ function endCards(){
 
     cat.onended=()=>{
       qr.style.opacity=1;
+      fireworksInterval=setInterval(spawnFirework,900);
       setTimeout(()=>restart.style.opacity=1,2000);
     };
   },4000);
@@ -356,6 +359,9 @@ function endCards(){
 
 </body>
 </html>
+
+
+
 
 
 
