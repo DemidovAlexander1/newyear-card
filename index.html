@@ -9,8 +9,10 @@
 html,body{
 margin:0;width:100%;height:100%;overflow:hidden;
 font-family:'Segoe UI',sans-serif;color:white;
+background:black;
 }
 
+/* фон */
 body{
 background:
 linear-gradient(rgba(5,10,30,.65),rgba(5,10,30,.85)),
@@ -20,12 +22,12 @@ url("bg.jpg") center/cover no-repeat fixed;
 /* старт */
 #start{
 position:fixed;inset:0;z-index:50;
-background:
-linear-gradient(rgba(5,10,30,.6),rgba(5,10,30,.9)),
-url("bg.jpg") center/cover no-repeat;
 display:flex;flex-direction:column;
 justify-content:center;align-items:center;
 text-align:center;
+background:
+linear-gradient(rgba(5,10,30,.6),rgba(5,10,30,.9)),
+url("bg.jpg") center/cover no-repeat;
 }
 #start button{
 font-size:22px;padding:18px 36px;border-radius:40px;
@@ -37,20 +39,6 @@ box-shadow:0 0 40px #00eaff;color:#000;
 /* снег */
 canvas{position:fixed;inset:0;z-index:2;pointer-events:none;}
 
-/* искры */
-.spark{
-position:fixed;
-width:6px;height:6px;
-background:white;
-border-radius:50%;
-pointer-events:none;
-opacity:.8;
-animation:spark 1s forwards;
-}
-@keyframes spark{
-to{transform:translate(var(--x),var(--y)) scale(0);opacity:0;}
-}
-
 /* открытка */
 .scene{
 position:relative;z-index:5;height:100%;
@@ -60,7 +48,7 @@ display:flex;justify-content:center;align-items:center;
 width:min(92vw,760px);
 height:min(58vw,420px);
 transform-style:preserve-3d;
-transition:transform 2s ease-in-out;
+transition:transform 2s ease-in-out, opacity 1.5s;
 }
 .side{
 position:absolute;inset:0;border-radius:30px;
@@ -87,7 +75,7 @@ animation:blink 2.5s infinite alternate;
 .text{
 flex:1;
 background:rgba(0,0,0,.45);
-padding:18px 18px 12px;
+padding:18px;
 border-radius:22px;
 display:flex;
 flex-direction:column;
@@ -95,32 +83,38 @@ justify-content:center;
 text-align:center;
 }
 .text h1{
-margin:0 0 8px 0;
+margin:0 0 10px 0;
 font-size:clamp(26px,6vw,38px);
 }
 .text p{
 margin:0;
 font-size:clamp(15px,4vw,19px);
-line-height:1.45;
+line-height:1.5;
 }
 
-/* подписи */
-.footer{
+/* подпись */
+.author{
+position:absolute;
+bottom:14px;
+right:18px;
 font-size:12px;
-opacity:.5;
-display:flex;
-justify-content:space-between;
-margin-top:6px;
+opacity:.45;
 }
 
 /* финал */
-#fade{position:fixed;inset:0;background:black;
-opacity:0;transition:opacity 3s;z-index:20;}
+#fade{
+position:fixed;inset:0;
+background:black;
+opacity:0;
+transition:opacity 3s;
+z-index:20;
+}
 
 #final{
-position:fixed;inset:0;z-index:30;
+position:fixed;inset:0;z-index:25;
 display:flex;justify-content:center;align-items:center;
-text-align:center;font-size:clamp(30px,7vw,64px);
+text-align:center;
+font-size:clamp(30px,7vw,64px);
 opacity:0;transition:opacity 1.2s;
 text-shadow:0 0 70px gold;
 }
@@ -128,14 +122,57 @@ text-shadow:0 0 70px gold;
 /* флеш */
 #whiteFlash{
 position:fixed;inset:0;background:white;
-opacity:0;z-index:40;
+opacity:0;z-index:30;
+transition:opacity 1s;
 }
 
 /* видео */
 #catVideo{
-position:fixed;inset:0;width:100%;height:100%;
-object-fit:cover;opacity:0;z-index:45;
+position:fixed;inset:0;
+width:100%;height:100%;
+object-fit:cover;
+opacity:0;
+z-index:35;
+transition:opacity 2.5s;
+}
+
+/* затемнение видео */
+#videoFade{
+position:fixed;inset:0;
+background:black;
+opacity:0;
+z-index:40;
+transition:opacity 4s;
+}
+
+/* QR */
+#qrBlock{
+position:fixed;
+inset:0;
+display:flex;
+flex-direction:column;
+justify-content:center;
+align-items:center;
+text-align:center;
+opacity:0;
+z-index:45;
 transition:opacity 3s;
+background:rgba(0,0,0,.55);
+}
+#qrBlock img{
+width:220px;
+max-width:70vw;
+margin-bottom:14px;
+}
+#qrBlock a{
+color:#8fefff;
+text-decoration:none;
+margin-bottom:18px;
+}
+#qrBlock p{
+max-width:90%;
+font-size:clamp(14px,4vw,18px);
+line-height:1.5;
 }
 
 /* кнопка */
@@ -179,41 +216,46 @@ background:rgba(255,255,255,.7);
 
 <div id="whiteFlash"></div>
 
-<video id="catVideo" src="cat.mp4" playsinline muted></video>
+<video id="catVideo" src="cat.mp4" playsinline></video>
+<div id="videoFade"></div>
 
-<audio id="audio"></audio>
+<div id="qrBlock">
+<img src="qr.png" alt="QR Telegram">
+<a href="https://t.me/Byte_squade" target="_blank">https://t.me/Byte_squade</a>
+<p>
+В новом году мне хочется пожелать нам больше живых встреч,
+тёплых разговоров и моментов, которые остаются в памяти.<br><br>
+Пусть поводов видеться и общаться будет больше,
+чем причин откладывать.<br><br>
+Спасибо, что ты есть в моей жизни 🤍
+</p>
+</div>
+
+<audio id="music"></audio>
+<audio id="flashSound" src="flash.mp3"></audio>
 <audio id="bell" src="bell.mp3"></audio>
 
 <button id="restart" onclick="location.reload()">↺ сначала</button>
 
 <script>
-const audio=document.getElementById("audio");
+const music=document.getElementById("music");
+const flashSound=document.getElementById("flashSound");
 const bell=document.getElementById("bell");
-bell.volume=0.15;
+bell.volume=0.12;
 
-let bellCount=0;
-function playBell(){
-if(bellCount<2){
-bell.currentTime=0;
-bell.play();
-bellCount++;
-}
-}
-
-/* старт */
 startBtn.onclick=()=>{
-audio.src="zitronsound-christmas-village.mp3";
-audio.volume=.7;
-audio.play();
+music.src="zitronsound-christmas-village.mp3";
+music.volume=.7;
+music.play();
 start.remove();
 };
 
 /* страницы */
 const pages=[
-["🌟","Пусть новый год принесёт спокойствие и ясность,<br>ощущение устойчивости и уверенности в завтрашнем дне."],
-["💫","Пусть цели достигаются без спешки,<br>а путь к ним будет ровным и осмысленным."],
-["🤍","Пусть рядом будут люди,<br>с которыми легко быть собой<br>и приятно делить обычные дни."],
-["✨","Пусть год подарит моменты,<br>которые захочется вспоминать<br>с тёплой улыбкой."]
+["🌟","Пусть новый год принесёт спокойствие и ощущение внутреннего равновесия."],
+["💫","Пусть желания находят путь к исполнению без спешки и лишнего шума."],
+["🤍","Пусть рядом будут люди, с которыми легко и по-настоящему тепло."],
+["✨","Пусть каждый месяц оставляет после себя добрые воспоминания."]
 ];
 
 function fill(el,[i,t]){
@@ -223,14 +265,11 @@ ${[...Array(20)].map((_,n)=>`<span style="--i:${n}"></span>`).join("")}
 </div>
 <div class="text">
 <h1>${i}</h1><p>${t}</p>
-<div class="footer">
-<span>декабрь 2025 — январь 2026</span>
-<span>@Demidovvv124</span>
 </div>
-</div>`;
+<div class="author">@Demidovvv124</div>`;
 }
 
-let idx=0,flip=false;
+let idx=0,flip=false,bellCount=0;
 fill(front,pages[0]);
 
 const timer=setInterval(()=>{
@@ -240,28 +279,32 @@ clearInterval(timer);
 setTimeout(finale,4000);
 return;
 }
-playBell();
+if(bellCount<2){
+bell.currentTime=0;
+bell.play();
+bellCount++;
+}
 fill(flip?front:back,pages[idx]);
 card.style.transform=flip?"rotateY(0)":"rotateY(180deg)";
 flip=!flip;
 },7000);
 
-/* финал */
 function finale(){
 fade.style.opacity=1;
 setTimeout(()=>final.style.opacity=1,2000);
 
 setTimeout(()=>{
 final.style.opacity=0;
-audio.pause();
-audio.currentTime=0;
+music.pause();
+
+card.style.opacity=0;
 
 whiteFlash.style.opacity=1;
-audio.src="flash.mp3";
-audio.volume=1;
-audio.play();
+flashSound.volume=1;
+flashSound.play();
 
 catVideo.style.opacity=1;
+catVideo.volume=1;
 catVideo.play();
 
 setTimeout(()=>{
@@ -269,28 +312,32 @@ whiteFlash.style.opacity=0;
 },900);
 
 setTimeout(()=>{
-document.getElementById("restart").style.opacity=1;
-},6000);
+videoFade.style.opacity=1;
+},9000);
+
+setTimeout(()=>{
+qrBlock.style.opacity=1;
+},11000);
+
+setTimeout(()=>{
+restart.style.opacity=1;
+},15000);
 
 },5500);
 }
 
-/* снег (двойной) */
+/* снег */
 const canvas=document.getElementById("bg");
 const ctx=canvas.getContext("2d");
-const dpr=window.devicePixelRatio||1;
 function resize(){
-canvas.width=innerWidth*dpr;
-canvas.height=innerHeight*dpr;
-canvas.style.width=innerWidth+"px";
-canvas.style.height=innerHeight+"px";
-ctx.setTransform(dpr,0,0,dpr,0,0);
+canvas.width=innerWidth;
+canvas.height=innerHeight;
 }
 resize();addEventListener("resize",resize);
 
 let snow=[];
-for(let i=0;i<150;i++)snow.push({x:Math.random()*innerWidth,y:Math.random()*innerHeight,vy:.5+Math.random(),s:1});
-for(let i=0;i<90;i++)snow.push({x:Math.random()*innerWidth,y:Math.random()*innerHeight,vy:1.5+Math.random()*1.5,s:2});
+for(let i=0;i<160;i++)snow.push({x:Math.random()*innerWidth,y:Math.random()*innerHeight,vy:.4+Math.random(),s:1});
+for(let i=0;i<90;i++)snow.push({x:Math.random()*innerWidth,y:Math.random()*innerHeight,vy:1.2+Math.random()*1.2,s:2});
 
 function draw(){
 ctx.clearRect(0,0,innerWidth,innerHeight);
@@ -303,22 +350,9 @@ ctx.fillRect(s.x,s.y,s.s,s.s);
 requestAnimationFrame(draw);
 }
 draw();
-
-/* искры */
-addEventListener("pointerdown",e=>{
-for(let i=0;i<12;i++){
-let s=document.createElement("div");
-s.className="spark";
-s.style.left=e.clientX+"px";
-s.style.top=e.clientY+"px";
-s.style.setProperty("--x",(Math.random()*120-60)+"px");
-s.style.setProperty("--y",(Math.random()*120-60)+"px");
-document.body.appendChild(s);
-setTimeout(()=>s.remove(),1000);
-}
-});
 </script>
 
 </body>
 </html>
+
 
