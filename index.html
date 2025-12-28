@@ -17,7 +17,7 @@ linear-gradient(rgba(5,10,30,.65),rgba(5,10,30,.85)),
 url("bg.jpg") center/cover no-repeat fixed;
 }
 
-/* ===== СТАРТ ===== */
+/* старт */
 #start{
 position:fixed;inset:0;z-index:50;
 background:
@@ -34,20 +34,17 @@ background:radial-gradient(circle,#00eaff,#0077ff);
 box-shadow:0 0 40px #00eaff;color:#000;
 }
 
-/* ===== СНЕГ ===== */
-canvas{
-position:fixed;inset:0;z-index:2;
-pointer-events:none;
-}
+/* снег */
+canvas{position:fixed;inset:0;z-index:2;pointer-events:none;}
 
-/* ===== ОТКРЫТКА ===== */
+/* открытка */
 .scene{
 position:relative;z-index:5;height:100%;
 display:flex;justify-content:center;align-items:center;
 }
 .card{
 width:min(92vw,760px);
-height:min(60vw,440px);
+height:min(58vw,420px);
 transform-style:preserve-3d;
 transition:transform 2s ease-in-out;
 }
@@ -56,53 +53,56 @@ position:absolute;inset:0;border-radius:30px;
 backface-visibility:hidden;
 background:linear-gradient(135deg,rgba(0,40,80,.88),rgba(0,20,50,.88));
 box-shadow:0 0 60px rgba(255,255,255,.35);
-padding:28px;
-overflow:hidden;
+padding:22px;
+display:flex;
+flex-direction:column;
 }
 .back{transform:rotateY(180deg);}
 
-.text{
-background:rgba(0,0,0,.45);
-padding:22px;border-radius:22px;
-display:flex;flex-direction:column;
-justify-content:center;text-align:center;
-max-height:100%;
-}
-.text h1{
-margin:0 0 10px 0;
-font-size:clamp(26px,6vw,40px);
-}
-.text p{
-margin:0;
-font-size:clamp(15px,4vw,20px);
-line-height:1.45;
-}
-
-/* гирлянда */
 .garland{
-position:absolute;top:0;left:0;width:100%;
 display:flex;justify-content:space-around;
+margin-bottom:12px;
 }
 .garland span{
-width:12px;height:12px;border-radius:50%;
+width:11px;height:11px;border-radius:50%;
 background:hsl(calc(var(--i)*20),100%,60%);
 animation:blink 2.5s infinite alternate;
 }
 @keyframes blink{to{opacity:.3;}}
 
-/* ===== ФИНАЛ ===== */
+.text{
+flex:1;
+background:rgba(0,0,0,.45);
+padding:18px 18px 14px;
+border-radius:22px;
+display:flex;
+flex-direction:column;
+justify-content:center;
+text-align:center;
+}
+.text h1{
+margin:0 0 8px 0;
+font-size:clamp(26px,6vw,38px);
+}
+.text p{
+margin:0;
+font-size:clamp(15px,4vw,19px);
+line-height:1.45;
+}
+
+/* финал */
 #fade{position:fixed;inset:0;background:black;
 opacity:0;transition:opacity 3s;z-index:20;}
 
 #final{
 position:fixed;inset:0;z-index:30;
 display:flex;justify-content:center;align-items:center;
-text-align:center;font-size:clamp(32px,7vw,64px);
+text-align:center;font-size:clamp(30px,7vw,64px);
 opacity:0;transition:opacity 1.2s;
 text-shadow:0 0 70px gold;
 }
 
-/* флешка */
+/* флеш */
 #whiteFlash{
 position:fixed;inset:0;background:white;
 opacity:0;z-index:40;
@@ -143,41 +143,37 @@ transition:opacity 3s;
 
 <div id="whiteFlash"></div>
 
-<video id="catVideo"
-src="cat.mp4"
-playsinline
-muted
-></video>
+<video id="catVideo" src="cat.mp4" playsinline muted></video>
 
 <audio id="music" src="zitronsound-christmas-village.mp3"></audio>
 <audio id="flashSound" src="flash.mp3"></audio>
 
 <script>
-/* ===== АУДИО РАЗРЕШЕНИЕ ===== */
 const music = document.getElementById("music");
 const flashSound = document.getElementById("flashSound");
 const catVideo = document.getElementById("catVideo");
 
+/* старт */
 startBtn.onclick = ()=>{
-music.volume = 0.7;
+music.volume=0.7;
 music.play();
 
-/* заранее разрешаем звук флешки */
-flashSound.load();
-flashSound.play().then(()=>{
-flashSound.pause();
-flashSound.currentTime = 0;
+/* ИНИЦИАЛИЗАЦИЯ ВИДЕО */
+catVideo.muted=true;
+catVideo.play().then(()=>{
+catVideo.pause();
+catVideo.currentTime=0;
 }).catch(()=>{});
 
 start.remove();
 };
 
-/* ===== ТЕКСТЫ ===== */
+/* страницы */
 const pages=[
-["🌟","Пусть в новом году станет больше ясности и спокойствия.<br>Меньше суеты, больше уверенности<br>и ощущение, что ты идёшь своим путём."],
-["💫","Пусть дела и цели складываются постепенно,<br>без спешки и давления,<br>но с результатом, которым действительно можно гордиться."],
-["🤍","Пусть рядом будут люди,<br>с которыми легко, надёжно и тепло,<br>и с которыми хочется делить обычные дни."],
-["✨","Пусть в новом году будет больше простых,<br>но по-настоящему хороших моментов,<br>которые хочется сохранить в памяти."]
+["🌟","Пусть новый год принесёт спокойствие и ясность,<br>ощущение устойчивости и уверенности в завтрашнем дне."],
+["💫","Пусть цели достигаются без спешки,<br>а путь к ним будет ровным и осмысленным."],
+["🤍","Пусть рядом будут люди,<br>с которыми легко быть собой<br>и приятно делить обычные дни."],
+["✨","Пусть год подарит моменты,<br>которые захочется вспоминать<br>с тёплой улыбкой."]
 ];
 
 function fill(el,[i,t]){
@@ -191,20 +187,19 @@ ${[...Array(20)].map((_,n)=>`<span style="--i:${n}"></span>`).join("")}
 let idx=0,flip=false;
 fill(front,pages[0]);
 
-const flipTimer=setInterval(()=>{
+const timer=setInterval(()=>{
 idx++;
 if(idx>=pages.length){
-clearInterval(flipTimer);
+clearInterval(timer);
 setTimeout(finale,4000);
 return;
 }
-let trg=flip?front:back;
-fill(trg,pages[idx]);
+fill(flip?front:back,pages[idx]);
 card.style.transform=flip?"rotateY(0)":"rotateY(180deg)";
 flip=!flip;
 },7000);
 
-/* ===== ФИНАЛ ===== */
+/* финал */
 function finale(){
 fade.style.opacity=1;
 setTimeout(()=>final.style.opacity=1,2000);
@@ -214,22 +209,21 @@ final.style.opacity=0;
 music.pause();music.currentTime=0;
 
 whiteFlash.style.opacity=1;
+
+/* флеш */
 flashSound.volume=1;
 flashSound.play();
 
-/* видео под флешкой */
-catVideo.muted=true;
-catVideo.volume=0;
-catVideo.play();
+/* видео */
 catVideo.style.opacity=1;
+catVideo.play();
 
-/* плавное затухание флешки */
-let ffade=setInterval(()=>{
+/* затухание флешки */
+let f=setInterval(()=>{
 flashSound.volume=Math.max(0,flashSound.volume-0.01);
 if(flashSound.volume<=0){
-clearInterval(ffade);
+clearInterval(f);
 flashSound.pause();
-flashSound.currentTime=0;
 }
 },120);
 
@@ -239,17 +233,17 @@ whiteFlash.style.transition="opacity 4s";
 whiteFlash.style.opacity=0;
 },900);
 
-/* рост звука видео */
+/* звук видео */
 setTimeout(()=>{catVideo.muted=false;},400);
-let vfade=setInterval(()=>{
-catVideo.volume=Math.min(1,catVideo.volume+0.012);
-if(catVideo.volume>=1)clearInterval(vfade);
+let v=setInterval(()=>{
+catVideo.volume=Math.min(1,catVideo.volume+0.015);
+if(catVideo.volume>=1)clearInterval(v);
 },120);
 
 },5500);
 }
 
-/* ===== СНЕГ (DPR FIX) ===== */
+/* снег */
 const canvas=document.getElementById("bg");
 const ctx=canvas.getContext("2d");
 const dpr=window.devicePixelRatio||1;
@@ -266,15 +260,9 @@ addEventListener("resize",resize);
 
 let snow=[];
 for(let i=0;i<220;i++){
-snow.push({
-x:Math.random()*innerWidth,
-y:Math.random()*innerHeight,
-vy:1+Math.random()*2,
-size:1+Math.random()*2
-});
+snow.push({x:Math.random()*innerWidth,y:Math.random()*innerHeight,vy:1+Math.random()*2,size:1+Math.random()*2});
 }
-
-function draw(){
+(function draw(){
 ctx.clearRect(0,0,innerWidth,innerHeight);
 snow.forEach(s=>{
 s.y+=s.vy;
@@ -283,10 +271,8 @@ ctx.fillStyle="rgba(255,255,255,.9)";
 ctx.fillRect(s.x,s.y,s.size,s.size);
 });
 requestAnimationFrame(draw);
-}
-draw();
+})();
 </script>
 
 </body>
 </html>
-
