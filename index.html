@@ -98,12 +98,12 @@ body{
   z-index:22;
 }
 
-#white{
+#whiteFlash{
   position:fixed;inset:0;
   background:white;
   opacity:0;
-  transition:opacity 3.5s linear;
   z-index:30;
+  pointer-events:none;
 }
 
 #cat{
@@ -111,7 +111,7 @@ body{
   width:100%;height:100%;
   object-fit:cover;
   opacity:0;
-  transition:opacity 3s ease;
+  transition:opacity 1.5s ease;
   z-index:35;
 }
 
@@ -119,8 +119,8 @@ body{
   position:fixed;inset:0;
   background:black;
   opacity:0;
-  transition:opacity 10s linear;
-  z-index:40;
+  transition:opacity 10s ease-in-out;
+  z-index:36;
 }
 
 #qr{
@@ -132,7 +132,7 @@ body{
   align-items:center;
   text-align:center;
   opacity:0;
-  transition:opacity 3s;
+  transition:opacity 2s ease-in-out;
   z-index:50;
 }
 #qr img{width:220px;margin-bottom:14px;}
@@ -155,6 +155,7 @@ body{
   cursor:pointer;
   opacity:0;
   background:rgba(255,255,255,.75);
+  transition:opacity 1s ease-in-out;
   z-index:60;
 }
 </style>
@@ -184,13 +185,13 @@ body{
 
 <div id="dark"></div>
 <div id="finalText">✨ С НОВЫМ 2026 ГОДОМ ✨</div>
-<div id="white"></div>
+<div id="whiteFlash"></div>
 
-<video id="cat" src="cat.mp4" playsinline webkit-playsinline></video>
+<video id="cat" src="cat.mp4" playsinline webkit-playsinline preload="metadata"></video>
 <div id="videoFade"></div>
 
 <div id="qr">
-  <img src="qr.png">
+  <img src="qr.png" alt="QR код">
   <a href="https://t.me/Byte_squade">https://t.me/Byte_squade</a>
   <p>
     В новом году пусть будет больше живых встреч,<br>
@@ -270,22 +271,74 @@ function drawHeart(x,y,size){
 /* ---------- AUDIO ---------- */
 const music=document.getElementById("music");
 const cat=document.getElementById("cat");
+const whiteFlash = document.getElementById("whiteFlash");
 
 let audioCtx,flashBuffer;
 async function initAudio(){
-  audioCtx=new (window.AudioContext||window.webkitAudioContext)();
-  await audioCtx.resume();
-  const r=await fetch("flash.mp3");
-  flashBuffer=await audioCtx.decodeAudioData(await r.arrayBuffer());
+  try {
+    audioCtx=new (window.AudioContext||window.webkitAudioContext)();
+    await audioCtx.resume();
+    const r=await fetch("flash.mp3");
+    flashBuffer=await audioCtx.decodeAudioData(await r.arrayBuffer());
+  } catch(e) {
+    console.error("Audio initialization error:", e);
+  }
 }
-function playFlash(){
-  const src=audioCtx.createBufferSource();
-  const gain=audioCtx.createGain();
-  src.buffer=flashBuffer;
-  src.connect(gain).connect(audioCtx.destination);
-  gain.gain.value=0.75;
-  src.start();
-  return gain;
+
+function playFlash() {
+  if (!audioCtx || !flashBuffer) return null;
+  
+  const source = audioCtx.createBufferSource();
+  const gainNode = audioCtx.createGain();
+  
+  source.buffer = flashBuffer;
+  source.connect(gainNode);
+  gainNode.connect(audioCtx.destination);
+  
+  // Настраиваем громкость для реалистичного эффекта
+  gainNode.gain.value = 0;
+  gainNode.gain.setValueAtTime(0, audioCtx.currentTime);
+  gainNode.gain.linearRampToValueAtTime(0.8, audioCtx.currentTime + 0.05); // Быстрый пик
+  gainNode.gain.exponentialRampToValueAtTime(0.01, audioCtx.currentTime + 2.5); // Медленное затухание
+  
+  source.start();
+  
+  // Синхронизируем визуальный эффект со звуком
+  const flashDuration = 2.5; // Длительность флешки в секундах
+  
+  // Мгновенная белая вспышка
+  whiteFlash.style.transition = 'opacity 0.05s ease-out';
+  whiteFlash.style.opacity = 1;
+  
+  // Плавное исчезновение слепоты, синхронизированное с затуханием звука
+  setTimeout(() => {
+    whiteFlash.style.transition = 'opacity 2s ease-out';
+    whiteFlash.style.opacity = 0;
+  }, 100);
+  
+  // Запускаем видео после небольшой задержки
+  setTimeout(() => {
+    cat.style.opacity = 1;
+    cat.muted = false;
+    cat.volume = 0;
+    
+    // Плавное увеличение громкости видео
+    const fadeInInterval = setInterval(() => {
+      if (cat.volume < 1) {
+        cat.volume += 0.05;
+      } else {
+        clearInterval(fadeInInterval);
+      }
+    }, 50);
+    
+    cat.play().catch(e => console.error("Video play error:", e));
+  }, 500);
+  
+  source.onended = () => {
+    gainNode.disconnect();
+  };
+  
+  return { source, gainNode };
 }
 
 /* ---------- START ---------- */
@@ -326,47 +379,34 @@ function endCards(){
   setTimeout(()=>{
     finalText.style.opacity=0;
     music.pause();
-
-    white.style.opacity=1;
-    const fg=playFlash();
-
-    cat.style.opacity=1;
-    cat.muted=true;
-
-    setTimeout(()=>{
-      cat.play().then(()=>{
-        cat.muted=false;
-        cat.volume=1;
-      });
-    },300);
-
-    setTimeout(()=>{
-      white.style.opacity=0;
-      let t=0;
-      const f=setInterval(()=>{
-        t+=0.05;
-        fg.gain.value=Math.max(0,0.75-t);
-        if(t>=0.75)clearInterval(f);
-      },80);
-    },5000);
-
-    cat.addEventListener("timeupdate",()=>{
-      if(cat.duration-cat.currentTime<=10){
-        videoFade.style.opacity=1;
+    
+    // Запускаем флешку с синхронизированным звуком
+    playFlash();
+    
+    // Настраиваем обработчики для видео
+    cat.addEventListener('timeupdate', function() {
+      if (this.duration - this.currentTime <= 12) {
+        videoFade.style.opacity = Math.min(1, (12 - (this.duration - this.currentTime)) / 10);
       }
     });
-
-    cat.onended=()=>{
-      setInterval(spawnHeart,200);
-      qr.style.opacity=1;
-      setTimeout(()=>restart.style.opacity=1,2000);
-    };
+    
+    cat.addEventListener('ended', function() {
+      videoFade.style.opacity = 1;
+      setTimeout(() => {
+        cat.style.opacity = 0;
+        qr.style.opacity = 1;
+        setInterval(spawnHeart, 200);
+        setTimeout(() => restart.style.opacity = 1, 2000);
+      }, 500);
+    });
+    
   },4000);
 }
 </script>
 
 </body>
 </html>
+
 
 
 
