@@ -119,8 +119,8 @@ body{
   position:fixed;inset:0;
   background:black;
   opacity:0;
-  transition:opacity 10s ease-in-out;
   z-index:36;
+  pointer-events:none;
 }
 
 #qr{
@@ -272,6 +272,7 @@ function drawHeart(x,y,size){
 const music=document.getElementById("music");
 const cat=document.getElementById("cat");
 const whiteFlash = document.getElementById("whiteFlash");
+const videoFade = document.getElementById("videoFade");
 
 let audioCtx,flashBuffer;
 async function initAudio(){
@@ -341,12 +342,64 @@ function playFlash() {
   return { source, gainNode };
 }
 
+/* ---------- VIDEO FADE HANDLER ---------- */
+function setupVideoFade() {
+  let isFading = false;
+  
+  cat.addEventListener('timeupdate', function() {
+    if (!this.duration) return;
+    
+    const timeLeft = this.duration - this.currentTime;
+    
+    // Начинаем затухание за 10 секунд до конца
+    if (timeLeft <= 10 && !isFading) {
+      isFading = true;
+      
+      // Плавное затухание видео (визуальное)
+      let opacity = 1;
+      const fadeInterval = setInterval(() => {
+        if (timeLeft <= 0) {
+          clearInterval(fadeInterval);
+          return;
+        }
+        
+        // Плавное уменьшение opacity видео и затемняющего слоя
+        opacity = Math.max(0, timeLeft / 10);
+        videoFade.style.opacity = 1 - opacity;
+        
+        // Синхронизированное затухание звука видео
+        if (cat.volume > 0) {
+          cat.volume = Math.max(0, opacity - 0.1); // Звук затухает немного быстрее
+        }
+        
+      }, 100);
+    }
+  });
+  
+  cat.addEventListener('ended', function() {
+    // Гарантируем полное затухание в конце
+    videoFade.style.opacity = 1;
+    cat.style.opacity = 0;
+    cat.volume = 0;
+    
+    // Показываем QR код
+    setTimeout(() => {
+      qr.style.opacity = 1;
+      setInterval(spawnHeart, 200);
+      setTimeout(() => restart.style.opacity = 1, 2000);
+    }, 500);
+  });
+}
+
 /* ---------- START ---------- */
 startBtn.onclick=async()=>{
   await initAudio();
   music.volume=0.7;
   await music.play();
   start.remove();
+  
+  // Настраиваем обработку затухания видео
+  setupVideoFade();
 };
 
 /* ---------- CARDS ---------- */
@@ -383,30 +436,12 @@ function endCards(){
     // Запускаем флешку с синхронизированным звуком
     playFlash();
     
-    // Настраиваем обработчики для видео
-    cat.addEventListener('timeupdate', function() {
-      if (this.duration - this.currentTime <= 12) {
-        videoFade.style.opacity = Math.min(1, (12 - (this.duration - this.currentTime)) / 10);
-      }
-    });
-    
-    cat.addEventListener('ended', function() {
-      videoFade.style.opacity = 1;
-      setTimeout(() => {
-        cat.style.opacity = 0;
-        qr.style.opacity = 1;
-        setInterval(spawnHeart, 200);
-        setTimeout(() => restart.style.opacity = 1, 2000);
-      }, 500);
-    });
-    
   },4000);
 }
 </script>
 
 </body>
 </html>
-
 
 
 
