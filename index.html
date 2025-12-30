@@ -118,7 +118,7 @@ body{
   opacity:0;
   z-index:35;
   pointer-events:none;
-  -webkit-transform: translateZ(0); /* Ускорение аппаратного рендеринга */
+  -webkit-transform: translateZ(0);
 }
 
 #videoFade{
@@ -164,6 +164,16 @@ body{
   z-index:60;
   -webkit-appearance: none;
 }
+
+/* Скрытый видео-контроллер для мобильных */
+#videoHelper {
+  position: fixed;
+  width: 1px;
+  height: 1px;
+  opacity: 0;
+  pointer-events: none;
+  z-index: -1;
+}
 </style>
 </head>
 
@@ -193,18 +203,23 @@ body{
 <div id="finalText">✨ С НОВЫМ 2026 ГОДОМ ✨</div>
 <div id="whiteFlash"></div>
 
-<!-- Добавлены дополнительные атрибуты для мобильных устройств -->
+<!-- Основное видео - скрытое для предзагрузки -->
 <video 
   id="cat" 
-  src="cat.mp4" 
-  playsinline 
-  webkit-playsinline 
   preload="auto" 
+  playsinline 
+  webkit-playsinline
   muted
   loop
-  disablePictureInPicture
-  controlsList="nodownload nofullscreen noremoteplayback"
 ></video>
+
+<!-- Скрытый видео элемент для запуска -->
+<video 
+  id="videoHelper" 
+  playsinline 
+  webkit-playsinline
+></video>
+
 <div id="videoFade"></div>
 
 <div id="qr">
@@ -222,10 +237,10 @@ body{
 <audio id="music" src="zitronsound-christmas-village.mp3"></audio>
 
 <script>
-/* ---------- ИНИЦИАЛИЗАЦИЯ ДЛЯ МОБИЛЬНЫХ УСТРОЙСТВ ---------- */
-let isMobile = /iPhone|iPad|iPod|Android/i.test(navigator.userAgent);
+/* ---------- ОПРЕДЕЛЕНИЕ УСТРОЙСТВА ---------- */
+const isMobile = /iPhone|iPad|iPod|Android/i.test(navigator.userAgent);
+const isIOS = /iPhone|iPad|iPod/i.test(navigator.userAgent);
 let userInteracted = false;
-let audioEnabled = false;
 
 /* ---------- SNOW ---------- */
 const snow=document.getElementById("snow"),ctx=snow.getContext("2d");
@@ -290,16 +305,46 @@ function drawHeart(x,y,size){
   requestAnimationFrame(drawHearts);
 })();
 
-/* ---------- AUDIO ---------- */
-const music=document.getElementById("music");
-const cat=document.getElementById("cat");
+/* ---------- АУДИО И ВИДЕО ---------- */
+const music = document.getElementById("music");
+const cat = document.getElementById("cat");
+const videoHelper = document.getElementById("videoHelper");
 const whiteFlash = document.getElementById("whiteFlash");
 const videoFade = document.getElementById("videoFade");
 
-let audioCtx,flashBuffer;
-async function initAudio(){
+let audioCtx, flashBuffer;
+let videoPreloaded = false;
+
+// Предзагрузка видео
+function preloadVideo() {
+  return new Promise((resolve) => {
+    if (videoPreloaded) {
+      resolve(true);
+      return;
+    }
+    
+    // Устанавливаем источник видео
+    cat.src = "cat.mp4";
+    
+    cat.addEventListener('loadeddata', () => {
+      console.log("Video preloaded");
+      videoPreloaded = true;
+      resolve(true);
+    }, { once: true });
+    
+    cat.addEventListener('error', (e) => {
+      console.error("Video preload error:", e);
+      resolve(false);
+    }, { once: true });
+    
+    // Загружаем видео
+    cat.load();
+  });
+}
+
+// Инициализация аудио
+async function initAudio() {
   try {
-    // Важно: на iOS нужно создавать контекст только после жеста пользователя
     if (!audioCtx) {
       audioCtx = new (window.AudioContext || window.webkitAudioContext)();
     }
@@ -308,168 +353,217 @@ async function initAudio(){
       await audioCtx.resume();
     }
     
-    const r=await fetch("flash.mp3");
-    flashBuffer=await audioCtx.decodeAudioData(await r.arrayBuffer());
-    audioEnabled = true;
+    const response = await fetch("flash.mp3");
+    flashBuffer = await audioCtx.decodeAudioData(await response.arrayBuffer());
+    return true;
   } catch(e) {
     console.error("Audio initialization error:", e);
-    // Fallback для мобильных устройств
-    audioEnabled = false;
+    return false;
   }
 }
 
-function playFlash() {
-  if (!audioEnabled) {
-    // Fallback: только визуальные эффекты
-    whiteFlash.style.transition = 'opacity 0.05s ease-out';
-    whiteFlash.style.opacity = 1;
+// Запуск видео на мобильных устройствах
+async function playMobileVideo() {
+  return new Promise(async (resolve) => {
+    console.log("Starting mobile video playback");
     
-    setTimeout(() => {
-      whiteFlash.style.transition = 'opacity 2s ease-out';
-      whiteFlash.style.opacity = 0;
-    }, 100);
+    // Создаем новый video элемент для iOS
+    const tempVideo = document.createElement('video');
+    tempVideo.playsInline = true;
+    tempVideo.webkitPlaysInline = true;
+    tempVideo.muted = true; // Начинаем без звука
+    tempVideo.src = "cat.mp4";
     
-    setTimeout(() => {
-      playVideo();
-    }, 500);
+    // Добавляем на страницу (но скрываем)
+    tempVideo.style.position = 'fixed';
+    tempVideo.style.width = '1px';
+    tempVideo.style.height = '1px';
+    tempVideo.style.opacity = '0';
+    tempVideo.style.pointerEvents = 'none';
+    tempVideo.style.zIndex = '-1';
+    document.body.appendChild(tempVideo);
     
-    return;
-  }
-  
-  if (!audioCtx || !flashBuffer) return null;
-  
-  const source = audioCtx.createBufferSource();
-  const gainNode = audioCtx.createGain();
-  
-  source.buffer = flashBuffer;
-  source.connect(gainNode);
-  gainNode.connect(audioCtx.destination);
-  
-  // Настраиваем громкость для реалистичного эффекта
-  gainNode.gain.value = 0;
-  gainNode.gain.setValueAtTime(0, audioCtx.currentTime);
-  gainNode.gain.linearRampToValueAtTime(0.8, audioCtx.currentTime + 0.05);
-  gainNode.gain.exponentialRampToValueAtTime(0.01, audioCtx.currentTime + 2.5);
-  
-  source.start();
-  
-  // Мгновенная белая вспышка
-  whiteFlash.style.transition = 'opacity 0.05s ease-out';
-  whiteFlash.style.opacity = 1;
-  
-  // Плавное исчезновение слепоты
-  setTimeout(() => {
-    whiteFlash.style.transition = 'opacity 2s ease-out';
-    whiteFlash.style.opacity = 0;
-  }, 100);
-  
-  // Запускаем видео через 500ms
-  setTimeout(() => {
-    playVideo();
-  }, 500);
-  
-  return { source, gainNode };
+    // Пытаемся запустить с muted
+    try {
+      await tempVideo.play();
+      console.log("Mobile video started (muted)");
+      
+      // Ждем немного и пробуем включить звук
+      setTimeout(async () => {
+        try {
+          tempVideo.muted = false;
+          tempVideo.volume = 1;
+          console.log("Sound unmuted");
+          resolve(true);
+        } catch(e) {
+          console.log("Could not unmute, continuing without sound");
+          resolve(true); // Продолжаем без звука
+        }
+      }, 100);
+      
+    } catch(e) {
+      console.error("Mobile video play failed:", e);
+      
+      // Fallback: используем основной элемент
+      try {
+        cat.muted = false;
+        cat.volume = 1;
+        await cat.play();
+        resolve(true);
+      } catch(e2) {
+        console.error("Fallback also failed:", e2);
+        resolve(false);
+      }
+    }
+  });
 }
 
-/* ---------- ВИДЕО ДЛЯ МОБИЛЬНЫХ ---------- */
-function playVideo() {
-  // На мобильных устройствах нужно снять mute и разрешить звук
+// Основная функция воспроизведения видео
+async function playVideo() {
+  console.log("playVideo called, isMobile:", isMobile);
+  
   if (isMobile) {
+    // На мобильных используем специальную функцию
+    const success = await playMobileVideo();
+    if (!success) {
+      console.log("Using fallback video playback");
+      // Пробуем просто показать видео без звука
+      cat.muted = true;
+      cat.style.opacity = 1;
+      cat.play().catch(e => console.error("Fallback video error:", e));
+    }
+  } else {
+    // На десктопе обычное воспроизведение
     cat.muted = false;
     cat.volume = 1;
+    cat.style.opacity = 1;
+    
+    try {
+      await cat.play();
+      console.log("Desktop video started successfully");
+    } catch(e) {
+      console.error("Desktop video error:", e);
+      // Пробуем с muted
+      cat.muted = true;
+      await cat.play();
+    }
   }
   
-  cat.style.opacity = 1;
-  
-  // Для мобильных устройств используем promise для воспроизведения
-  const playPromise = cat.play();
-  
-  if (playPromise !== undefined) {
-    playPromise.then(() => {
-      console.log("Video started successfully");
-    }).catch(error => {
-      console.error("Video play error:", error);
-      // Fallback: показываем статичное изображение или альтернативу
-      cat.poster = "poster.jpg"; // Добавьте poster.jpg с кадром из видео
-      cat.style.opacity = 1;
-    });
-  }
-  
-  // Настраиваем плавное затухание видео и звука за 10 секунд до конца
+  // Настраиваем плавное затухание
+  setupVideoFade();
+}
+
+// Настройка плавного затухания видео
+function setupVideoFade() {
   let fadeStarted = false;
   
   function checkFade() {
-    if (!cat.duration || fadeStarted) return;
+    if (!cat.duration || fadeStarted || cat.paused) return;
     
     const timeLeft = cat.duration - cat.currentTime;
     
     if (timeLeft <= 10) {
       fadeStarted = true;
       
-      // Плавное затухание видео и звука в течение 10 секунд
       const fadeStartTime = cat.currentTime;
-      const totalFadeTime = 10; // секунд
+      const totalFadeTime = 10;
       
       function fadeVideo() {
-        if (!cat.duration) return;
+        if (!cat.duration || cat.paused) return;
         
         const currentTime = cat.currentTime;
         const elapsed = currentTime - fadeStartTime;
         const fadeProgress = Math.min(elapsed / totalFadeTime, 1);
         
-        // Затухание затемнения (от 0 до 1)
         videoFade.style.opacity = fadeProgress;
-        
-        // Затухание звука видео (от 1 до 0)
         cat.volume = Math.max(0, 1 - fadeProgress);
         
-        // Если еще не конец, продолжаем затухание
         if (fadeProgress < 1) {
           requestAnimationFrame(fadeVideo);
         }
       }
       
-      // Запускаем плавное затухание
       requestAnimationFrame(fadeVideo);
     }
   }
   
-  // Проверяем каждые 100ms
   const fadeCheckInterval = setInterval(checkFade, 100);
   
-  // Когда видео закончится
   cat.addEventListener('ended', () => {
     clearInterval(fadeCheckInterval);
     videoFade.style.opacity = 1;
     cat.style.opacity = 0;
     
-    // Показываем QR код
     setTimeout(() => {
-      qr.style.opacity = 1;
+      document.getElementById('qr').style.opacity = 1;
       setInterval(spawnHeart, 200);
-      setTimeout(() => restart.style.opacity = 1, 2000);
+      setTimeout(() => document.getElementById('restart').style.opacity = 1, 2000);
     }, 500);
   });
 }
 
-/* ---------- START ---------- */
-startBtn.onclick=async()=>{
-  userInteracted = true;
+// Воспроизведение флеш-эффекта
+async function playFlash() {
+  console.log("playFlash called");
   
-  // Для мобильных: сначала инициализируем аудио
-  await initAudio();
+  // Белая вспышка
+  whiteFlash.style.transition = 'opacity 0.05s ease-out';
+  whiteFlash.style.opacity = 1;
   
-  // Начинаем с muted на мобильных, чтобы обойти ограничения
-  if (isMobile) {
-    music.muted = true;
-    music.volume = 0;
+  setTimeout(() => {
+    whiteFlash.style.transition = 'opacity 2s ease-out';
+    whiteFlash.style.opacity = 0;
+  }, 100);
+  
+  // Пытаемся воспроизвести звук вспышки
+  try {
+    const audioEnabled = await initAudio();
+    if (audioEnabled && flashBuffer) {
+      const source = audioCtx.createBufferSource();
+      const gainNode = audioCtx.createGain();
+      
+      source.buffer = flashBuffer;
+      source.connect(gainNode);
+      gainNode.connect(audioCtx.destination);
+      
+      gainNode.gain.value = 0;
+      gainNode.gain.setValueAtTime(0, audioCtx.currentTime);
+      gainNode.gain.linearRampToValueAtTime(0.8, audioCtx.currentTime + 0.05);
+      gainNode.gain.exponentialRampToValueAtTime(0.01, audioCtx.currentTime + 2.5);
+      
+      source.start();
+    }
+  } catch(e) {
+    console.log("Flash sound error (non-critical):", e);
   }
   
+  // Запускаем видео через 500ms
+  setTimeout(async () => {
+    console.log("Starting video after flash");
+    await playVideo();
+  }, 500);
+}
+
+/* ---------- START ---------- */
+startBtn.onclick = async function() {
+  console.log("Start button clicked");
+  userInteracted = true;
+  
+  // Предзагружаем видео сразу при клике
+  await preloadVideo();
+  
+  // Запускаем музыку
   try {
+    // На мобильных начинаем с muted
+    if (isMobile) {
+      music.muted = true;
+      music.volume = 0;
+    }
+    
     await music.play();
     
-    // На мобильных включаем звук после успешного начала воспроизведения
-    if (isMobile && audioEnabled) {
+    // На мобильных включаем звук после успешного старта
+    if (isMobile) {
       setTimeout(() => {
         music.muted = false;
         music.volume = 0.7;
@@ -478,16 +572,21 @@ startBtn.onclick=async()=>{
       music.volume = 0.7;
     }
     
-    start.remove();
+    console.log("Music started");
+    document.getElementById('start').remove();
   } catch(e) {
-    console.error("Music play error:", e);
-    // Если музыка не запустилась, продолжаем без неё
-    start.remove();
+    console.error("Music error:", e);
+    // Если музыка не запустилась, все равно продолжаем
+    document.getElementById('start').remove();
   }
 };
 
-// Дополнительный обработчик жестов для мобильных
+// Обработчик жестов для мобильных
 document.addEventListener('touchstart', function() {
+  userInteracted = true;
+}, { once: true });
+
+document.addEventListener('click', function() {
   userInteracted = true;
 }, { once: true });
 
@@ -515,6 +614,7 @@ const timer=setInterval(()=>{
 
 /* ---------- FINAL ---------- */
 function endCards(){
+  console.log("endCards called");
   dark.style.opacity=1;
   setTimeout(()=>finalText.style.opacity=1,1500);
 
@@ -522,28 +622,31 @@ function endCards(){
     finalText.style.opacity=0;
     music.pause();
     
-    // Запускаем флешку с синхронизированным звуком
+    // Запускаем флешку
     playFlash();
     
   },4000);
 }
 
-/* ---------- PRELOAD ВИДЕО ---------- */
-// На мобильных предзагружаем видео после взаимодействия
-if (isMobile) {
-  cat.load();
-  // Устанавливаем poster как fallback
-  cat.addEventListener('error', () => {
-    console.log("Video failed to load, using poster fallback");
-    cat.poster = "poster.jpg";
-  });
-}
+/* ---------- АВТОМАТИЧЕСКАЯ ПРЕДЗАГРУЗКА ---------- */
+// Предзагружаем основные ресурсы после загрузки страницы
+window.addEventListener('load', async () => {
+  console.log("Page loaded, preloading resources");
+  
+  // Предзагружаем видео (но не запускаем)
+  if (!isMobile) {
+    // На десктопе можно предзагрузить нормально
+    cat.src = "cat.mp4";
+    cat.load();
+  }
+  
+  // Предзагружаем музыку
+  music.load();
+});
 </script>
 
 </body>
 </html>
-
-
 
 
 
