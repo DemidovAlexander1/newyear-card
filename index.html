@@ -11,6 +11,8 @@ html,body{
   overflow:hidden;
   font-family:'Segoe UI',sans-serif;
   background:black;color:white;
+  -webkit-tap-highlight-color: transparent;
+  touch-action: manipulation;
 }
 body{
   background:
@@ -28,6 +30,7 @@ body{
   gap:22px;
   z-index:100;
   background:inherit;
+  touch-action: manipulation;
 }
 #browserNote{
   max-width:340px;
@@ -46,6 +49,8 @@ body{
   background:radial-gradient(circle,#00eaff,#0077ff);
   box-shadow:0 0 40px #00eaff;
   cursor:pointer;
+  touch-action: manipulation;
+  -webkit-appearance: none;
 }
 
 .scene{height:100%;display:flex;justify-content:center;align-items:center;}
@@ -113,6 +118,7 @@ body{
   opacity:0;
   z-index:35;
   pointer-events:none;
+  -webkit-transform: translateZ(0); /* Ускорение аппаратного рендеринга */
 }
 
 #videoFade{
@@ -156,6 +162,7 @@ body{
   opacity:0;
   background:rgba(255,255,255,.75);
   z-index:60;
+  -webkit-appearance: none;
 }
 </style>
 </head>
@@ -186,7 +193,18 @@ body{
 <div id="finalText">✨ С НОВЫМ 2026 ГОДОМ ✨</div>
 <div id="whiteFlash"></div>
 
-<video id="cat" src="cat.mp4" playsinline webkit-playsinline preload="metadata"></video>
+<!-- Добавлены дополнительные атрибуты для мобильных устройств -->
+<video 
+  id="cat" 
+  src="cat.mp4" 
+  playsinline 
+  webkit-playsinline 
+  preload="auto" 
+  muted
+  loop
+  disablePictureInPicture
+  controlsList="nodownload nofullscreen noremoteplayback"
+></video>
 <div id="videoFade"></div>
 
 <div id="qr">
@@ -204,6 +222,11 @@ body{
 <audio id="music" src="zitronsound-christmas-village.mp3"></audio>
 
 <script>
+/* ---------- ИНИЦИАЛИЗАЦИЯ ДЛЯ МОБИЛЬНЫХ УСТРОЙСТВ ---------- */
+let isMobile = /iPhone|iPad|iPod|Android/i.test(navigator.userAgent);
+let userInteracted = false;
+let audioEnabled = false;
+
 /* ---------- SNOW ---------- */
 const snow=document.getElementById("snow"),ctx=snow.getContext("2d");
 let W,H;
@@ -276,16 +299,43 @@ const videoFade = document.getElementById("videoFade");
 let audioCtx,flashBuffer;
 async function initAudio(){
   try {
-    audioCtx=new (window.AudioContext||window.webkitAudioContext)();
-    await audioCtx.resume();
+    // Важно: на iOS нужно создавать контекст только после жеста пользователя
+    if (!audioCtx) {
+      audioCtx = new (window.AudioContext || window.webkitAudioContext)();
+    }
+    
+    if (audioCtx.state === 'suspended') {
+      await audioCtx.resume();
+    }
+    
     const r=await fetch("flash.mp3");
     flashBuffer=await audioCtx.decodeAudioData(await r.arrayBuffer());
+    audioEnabled = true;
   } catch(e) {
     console.error("Audio initialization error:", e);
+    // Fallback для мобильных устройств
+    audioEnabled = false;
   }
 }
 
 function playFlash() {
+  if (!audioEnabled) {
+    // Fallback: только визуальные эффекты
+    whiteFlash.style.transition = 'opacity 0.05s ease-out';
+    whiteFlash.style.opacity = 1;
+    
+    setTimeout(() => {
+      whiteFlash.style.transition = 'opacity 2s ease-out';
+      whiteFlash.style.opacity = 0;
+    }, 100);
+    
+    setTimeout(() => {
+      playVideo();
+    }, 500);
+    
+    return;
+  }
+  
   if (!audioCtx || !flashBuffer) return null;
   
   const source = audioCtx.createBufferSource();
@@ -315,80 +365,131 @@ function playFlash() {
   
   // Запускаем видео через 500ms
   setTimeout(() => {
-    cat.style.opacity = 1;
-    cat.muted = false;
-    cat.volume = 1;
-    
-    cat.play().catch(e => console.error("Video play error:", e));
-    
-    // Настраиваем плавное затухание видео и звука за 10 секунд до конца
-    let fadeStarted = false;
-    
-    function checkFade() {
-      if (!cat.duration || fadeStarted) return;
-      
-      const timeLeft = cat.duration - cat.currentTime;
-      
-      if (timeLeft <= 10) {
-        fadeStarted = true;
-        
-        // Плавное затухание видео и звука в течение 10 секунд
-        const fadeStartTime = cat.currentTime;
-        const totalFadeTime = 10; // секунд
-        
-        function fadeVideo() {
-          if (!cat.duration) return;
-          
-          const currentTime = cat.currentTime;
-          const elapsed = currentTime - fadeStartTime;
-          const fadeProgress = Math.min(elapsed / totalFadeTime, 1);
-          
-          // Затухание затемнения (от 0 до 1)
-          videoFade.style.opacity = fadeProgress;
-          
-          // Затухание звука видео (от 1 до 0)
-          cat.volume = Math.max(0, 1 - fadeProgress);
-          
-          // Если еще не конец, продолжаем затухание
-          if (fadeProgress < 1) {
-            requestAnimationFrame(fadeVideo);
-          }
-        }
-        
-        // Запускаем плавное затухание
-        requestAnimationFrame(fadeVideo);
-      }
-    }
-    
-    // Проверяем каждые 100ms
-    const fadeCheckInterval = setInterval(checkFade, 100);
-    
-    // Когда видео закончится
-    cat.addEventListener('ended', () => {
-      clearInterval(fadeCheckInterval);
-      videoFade.style.opacity = 1;
-      cat.style.opacity = 0;
-      
-      // Показываем QR код
-      setTimeout(() => {
-        qr.style.opacity = 1;
-        setInterval(spawnHeart, 200);
-        setTimeout(() => restart.style.opacity = 1, 2000);
-      }, 500);
-    });
-    
+    playVideo();
   }, 500);
   
   return { source, gainNode };
 }
 
+/* ---------- ВИДЕО ДЛЯ МОБИЛЬНЫХ ---------- */
+function playVideo() {
+  // На мобильных устройствах нужно снять mute и разрешить звук
+  if (isMobile) {
+    cat.muted = false;
+    cat.volume = 1;
+  }
+  
+  cat.style.opacity = 1;
+  
+  // Для мобильных устройств используем promise для воспроизведения
+  const playPromise = cat.play();
+  
+  if (playPromise !== undefined) {
+    playPromise.then(() => {
+      console.log("Video started successfully");
+    }).catch(error => {
+      console.error("Video play error:", error);
+      // Fallback: показываем статичное изображение или альтернативу
+      cat.poster = "poster.jpg"; // Добавьте poster.jpg с кадром из видео
+      cat.style.opacity = 1;
+    });
+  }
+  
+  // Настраиваем плавное затухание видео и звука за 10 секунд до конца
+  let fadeStarted = false;
+  
+  function checkFade() {
+    if (!cat.duration || fadeStarted) return;
+    
+    const timeLeft = cat.duration - cat.currentTime;
+    
+    if (timeLeft <= 10) {
+      fadeStarted = true;
+      
+      // Плавное затухание видео и звука в течение 10 секунд
+      const fadeStartTime = cat.currentTime;
+      const totalFadeTime = 10; // секунд
+      
+      function fadeVideo() {
+        if (!cat.duration) return;
+        
+        const currentTime = cat.currentTime;
+        const elapsed = currentTime - fadeStartTime;
+        const fadeProgress = Math.min(elapsed / totalFadeTime, 1);
+        
+        // Затухание затемнения (от 0 до 1)
+        videoFade.style.opacity = fadeProgress;
+        
+        // Затухание звука видео (от 1 до 0)
+        cat.volume = Math.max(0, 1 - fadeProgress);
+        
+        // Если еще не конец, продолжаем затухание
+        if (fadeProgress < 1) {
+          requestAnimationFrame(fadeVideo);
+        }
+      }
+      
+      // Запускаем плавное затухание
+      requestAnimationFrame(fadeVideo);
+    }
+  }
+  
+  // Проверяем каждые 100ms
+  const fadeCheckInterval = setInterval(checkFade, 100);
+  
+  // Когда видео закончится
+  cat.addEventListener('ended', () => {
+    clearInterval(fadeCheckInterval);
+    videoFade.style.opacity = 1;
+    cat.style.opacity = 0;
+    
+    // Показываем QR код
+    setTimeout(() => {
+      qr.style.opacity = 1;
+      setInterval(spawnHeart, 200);
+      setTimeout(() => restart.style.opacity = 1, 2000);
+    }, 500);
+  });
+}
+
 /* ---------- START ---------- */
 startBtn.onclick=async()=>{
+  userInteracted = true;
+  
+  // Для мобильных: сначала инициализируем аудио
   await initAudio();
-  music.volume=0.7;
-  await music.play();
-  start.remove();
+  
+  // Начинаем с muted на мобильных, чтобы обойти ограничения
+  if (isMobile) {
+    music.muted = true;
+    music.volume = 0;
+  }
+  
+  try {
+    await music.play();
+    
+    // На мобильных включаем звук после успешного начала воспроизведения
+    if (isMobile && audioEnabled) {
+      setTimeout(() => {
+        music.muted = false;
+        music.volume = 0.7;
+      }, 100);
+    } else {
+      music.volume = 0.7;
+    }
+    
+    start.remove();
+  } catch(e) {
+    console.error("Music play error:", e);
+    // Если музыка не запустилась, продолжаем без неё
+    start.remove();
+  }
 };
+
+// Дополнительный обработчик жестов для мобильных
+document.addEventListener('touchstart', function() {
+  userInteracted = true;
+}, { once: true });
 
 /* ---------- CARDS ---------- */
 const pages=[
@@ -426,10 +527,22 @@ function endCards(){
     
   },4000);
 }
+
+/* ---------- PRELOAD ВИДЕО ---------- */
+// На мобильных предзагружаем видео после взаимодействия
+if (isMobile) {
+  cat.load();
+  // Устанавливаем poster как fallback
+  cat.addEventListener('error', () => {
+    console.log("Video failed to load, using poster fallback");
+    cat.poster = "poster.jpg";
+  });
+}
 </script>
 
 </body>
 </html>
+
 
 
 
