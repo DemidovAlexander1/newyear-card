@@ -3,17 +3,24 @@
 <head>
 <meta charset="UTF-8">
 <title>Новогодняя открытка 2026</title>
-<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
 
 <style>
 html,body{
-  margin:0;width:100%;height:100%;
+  margin:0;
+  padding:0;
+  width:100%;
+  height:100%;
   overflow:hidden;
   font-family:'Segoe UI',system-ui,sans-serif;
   background:#000;
   color:#fff;
   -webkit-tap-highlight-color: transparent;
   touch-action: manipulation;
+  overscroll-behavior: none;
+  -webkit-text-size-adjust: 100%;
+  -moz-text-size-adjust: 100%;
+  text-size-adjust: 100%;
 }
 
 /* Фон с картинкой */
@@ -21,20 +28,26 @@ body{
   background:
     linear-gradient(rgba(0,0,0,0.85), rgba(0,0,0,0.95)),
     url("bg.jpg") center/cover no-repeat fixed;
+  position: fixed;
+  width: 100%;
+  height: 100%;
 }
 
 #snow{
   position:fixed;
-  inset:0;
+  top:0;
+  left:0;
+  width:100%;
+  height:100%;
   pointer-events:none;
   z-index:2;
   opacity:0.8;
 }
 #tg{
   position:fixed;
-  left:20px;
-  bottom:20px;
-  font-size:14px;
+  left:15px;
+  bottom:15px;
+  font-size:12px;
   opacity:.3;
   z-index:5;
   font-family:monospace;
@@ -43,17 +56,23 @@ body{
 /* Стартовый экран */
 #start{
   position:fixed;
-  inset:0;
+  top:0;
+  left:0;
+  width:100%;
+  height:100%;
   display:flex;
   flex-direction:column;
   justify-content:center;
   align-items:center;
-  gap:40px;
+  gap:30px;
   z-index:100;
   background:rgba(0,0,0,0.95);
   backdrop-filter:blur(10px);
+  -webkit-backdrop-filter:blur(10px);
   opacity:0;
   animation: gentleAppear 1s ease forwards;
+  padding:20px;
+  box-sizing:border-box;
 }
 @keyframes gentleAppear {
   to { opacity:1; }
@@ -61,24 +80,26 @@ body{
 
 #browserNote{
   max-width:400px;
-  padding:24px 32px;
-  font-size:15px;
+  width:90%;
+  padding:20px;
+  font-size:14px;
   line-height:1.6;
   text-align:center;
   background:rgba(0,20,40,0.8);
-  border-radius:24px;
+  border-radius:20px;
   border:1px solid rgba(100,200,255,0.2);
-  box-shadow:0 15px 40px rgba(0,100,255,0.3);
+  box-shadow:0 10px 30px rgba(0,100,255,0.3);
   transform:translateY(20px);
   animation: noteAppear 1s 0.5s ease forwards;
+  box-sizing:border-box;
 }
 @keyframes noteAppear {
   to { transform:translateY(0); }
 }
 
 #startBtn{
-  padding:20px 48px;
-  font-size:24px;
+  padding:16px 32px;
+  font-size:20px;
   font-weight:600;
   border:none;
   border-radius:50px;
@@ -88,13 +109,16 @@ body{
   cursor:pointer;
   position:relative;
   overflow:hidden;
-  box-shadow:0 0 50px rgba(0,234,255,0.5);
+  box-shadow:0 0 30px rgba(0,234,255,0.5);
   transition:all 0.3s ease;
   animation:
     gradientFlow 3s ease infinite,
     buttonAppear 1s 0.7s ease forwards;
   opacity:0;
   transform:scale(0.95);
+  min-width:200px;
+  -webkit-appearance:none;
+  touch-action:manipulation;
 }
 @keyframes gradientFlow {
   0%, 100% { background-position:0% 50%; }
@@ -103,9 +127,8 @@ body{
 @keyframes buttonAppear {
   to { opacity:1; transform:scale(1); }
 }
-#startBtn:hover, #startBtn:active{
-  transform:scale(1.05);
-  box-shadow:0 0 70px rgba(0,234,255,0.7);
+#startBtn:active{
+  transform:scale(0.98);
 }
 #startBtn::before{
   content:'';
@@ -117,12 +140,13 @@ body{
   background:linear-gradient(90deg,transparent,rgba(255,255,255,0.2),transparent);
   transition:0.5s;
 }
-#startBtn:hover::before{
+#startBtn:active::before{
   left:100%;
 }
 
 /* Сцена с открыткой */
 .scene{
+  width:100%;
   height:100%;
   display:flex;
   justify-content:center;
@@ -131,6 +155,8 @@ body{
   opacity:0;
   transform:scale(0.95);
   transition:all 1.2s cubic-bezier(0.34,1.56,0.64,1);
+  padding:20px;
+  box-sizing:border-box;
 }
 .scene.active {
   opacity:1;
@@ -138,8 +164,8 @@ body{
 }
 
 .card{
-  width:min(90vw, 800px);
-  height:min(60vw, 450px);
+  width:min(95vw, 800px);
+  height:min(65vh, 450px);
   position:relative;
   transform-style:preserve-3d;
   transition:transform 1.5s cubic-bezier(0.4,0.2,0.2,1);
@@ -149,28 +175,29 @@ body{
   position:absolute;
   width:100%;
   height:100%;
-  border-radius:28px;
+  border-radius:20px;
   backface-visibility:hidden;
   overflow:hidden;
   background:linear-gradient(145deg,rgba(0,30,70,0.95),rgba(0,15,40,0.98));
   border:1px solid rgba(100,200,255,0.3);
-  box-shadow:0 25px 60px rgba(0,100,255,0.4),
+  box-shadow:0 20px 50px rgba(0,100,255,0.4),
              inset 0 1px 0 rgba(255,255,255,0.1);
   display:flex;
   flex-direction:column;
-  padding:40px;
+  padding:25px;
+  box-sizing:border-box;
 }
 .back{
   transform:rotateY(180deg);
 }
 
-/* Гирлянда - исправленная (над карточкой) */
+/* Гирлянда */
 .garland-wrapper {
   position: absolute;
-  top: -20px;
+  top: -15px;
   left: 0;
   width: 100%;
-  height: 40px;
+  height: 30px;
   display: flex;
   justify-content: center;
   z-index: 10;
@@ -179,10 +206,10 @@ body{
 .garland{
   display:flex;
   justify-content:space-between;
-  width:calc(100% - 80px);
-  padding:10px 20px;
+  width:calc(100% - 40px);
+  padding:8px 15px;
   background:rgba(0,0,0,0.6);
-  border-radius:20px;
+  border-radius:15px;
   border:1px solid rgba(255,255,255,0.1);
   position:relative;
 }
@@ -190,19 +217,19 @@ body{
   content:'';
   position:absolute;
   top:50%;
-  left:20px;
-  right:20px;
+  left:15px;
+  right:15px;
   height:2px;
   background:rgba(255,255,255,0.1);
   transform:translateY(-50%);
   z-index:1;
 }
 .garland span{
-  width:14px;
-  height:14px;
+  width:10px;
+  height:10px;
   border-radius:50%;
   background:hsl(calc(var(--i) * 20), 100%, 65%);
-  box-shadow:0 0 12px currentColor;
+  box-shadow:0 0 8px currentColor;
   animation:blink 2s infinite alternate calc(var(--i) * 0.1s);
   position:relative;
   z-index:2;
@@ -216,7 +243,7 @@ body{
   bottom:-2px;
   border-radius:50%;
   background:currentColor;
-  filter:blur(6px);
+  filter:blur(4px);
   opacity:0.3;
 }
 @keyframes blink{
@@ -226,36 +253,42 @@ body{
 
 /* Текст карточки */
 .card-content{
-  margin-top:40px;
+  margin-top:30px;
   flex:1;
   display:flex;
   flex-direction:column;
   justify-content:center;
   align-items:center;
   text-align:center;
+  overflow-y:auto;
+  -webkit-overflow-scrolling:touch;
 }
 .card-content h1{
-  margin:0 0 20px;
-  font-size:clamp(36px, 6vw, 48px);
+  margin:0 0 15px;
+  font-size:clamp(28px, 6vw, 40px);
   background:linear-gradient(45deg,#fff,#a0e0ff,#ffa0ff);
   -webkit-background-clip:text;
   background-clip:text;
   color:transparent;
   font-weight:800;
-  text-shadow:0 0 20px rgba(160,224,255,0.3);
+  text-shadow:0 0 15px rgba(160,224,255,0.3);
 }
 .card-content p{
   margin:0;
-  font-size:clamp(18px, 3.5vw, 22px);
-  line-height:1.7;
+  font-size:clamp(16px, 3.5vw, 20px);
+  line-height:1.6;
   color:rgba(255,255,255,0.95);
   font-weight:300;
+  max-width:90%;
 }
 
 /* Затемнение и поздравление */
 #dark{
   position:fixed;
-  inset:0;
+  top:0;
+  left:0;
+  width:100%;
+  height:100%;
   background:#000;
   opacity:0;
   transition:opacity 2.5s cubic-bezier(0.4,0,0.2,1);
@@ -265,12 +298,15 @@ body{
 
 #finalText{
   position:fixed;
-  inset:0;
+  top:0;
+  left:0;
+  width:100%;
+  height:100%;
   display:flex;
   justify-content:center;
   align-items:center;
   text-align:center;
-  font-size:clamp(36px, 7vw, 64px);
+  font-size:clamp(28px, 6vw, 50px);
   font-weight:900;
   opacity:0;
   transition:opacity 2s ease;
@@ -279,16 +315,20 @@ body{
   -webkit-background-clip:text;
   background-clip:text;
   color:transparent;
-  padding:30px;
+  padding:20px;
   pointer-events:none;
-  text-shadow:0 0 30px rgba(0,234,255,0.5);
+  text-shadow:0 0 20px rgba(0,234,255,0.5);
   letter-spacing:1px;
+  box-sizing:border-box;
 }
 
 /* Вспышка */
 #whiteFlash{
   position:fixed;
-  inset:0;
+  top:0;
+  left:0;
+  width:100%;
+  height:100%;
   background:#fff;
   opacity:0;
   z-index:30;
@@ -296,10 +336,11 @@ body{
   transition:opacity 3s ease-out;
 }
 
-/* Видео */
+/* Видео - исправлено для мобильных */
 #cat{
   position:fixed;
-  inset:0;
+  top:0;
+  left:0;
   width:100%;
   height:100%;
   object-fit:cover;
@@ -307,6 +348,8 @@ body{
   z-index:35;
   pointer-events:none;
   transition:opacity 1.5s ease;
+  transform:translateZ(0);
+  -webkit-transform:translateZ(0);
 }
 #cat.playing {
   opacity:1;
@@ -315,7 +358,10 @@ body{
 /* Затемнение видео */
 #videoFade{
   position:fixed;
-  inset:0;
+  top:0;
+  left:0;
+  width:100%;
+  height:100%;
   background:#000;
   opacity:0;
   z-index:36;
@@ -329,21 +375,26 @@ body{
   left:50%;
   transform:translate(-50%,-50%);
   color:#fff;
-  font-size:20px;
+  font-size:18px;
   opacity:0;
   z-index:37;
   pointer-events:none;
   background:rgba(0,20,40,0.8);
-  padding:20px 40px;
-  border-radius:20px;
+  padding:15px 30px;
+  border-radius:15px;
   backdrop-filter:blur(10px);
   border:1px solid rgba(255,255,255,0.1);
+  text-align:center;
+  white-space:nowrap;
 }
 
 /* Финальный экран */
 #finalScreen{
   position:fixed;
-  inset:0;
+  top:0;
+  left:0;
+  width:100%;
+  height:100%;
   background:#000;
   opacity:0;
   z-index:50;
@@ -354,7 +405,10 @@ body{
 /* Эффекты на черном фоне */
 .final-effects{
   position:absolute;
-  inset:0;
+  top:0;
+  left:0;
+  width:100%;
+  height:100%;
   opacity:0.1;
 }
 .final-effects::before{
@@ -362,11 +416,11 @@ body{
   position:absolute;
   top:20%;
   left:10%;
-  width:300px;
-  height:300px;
+  width:200px;
+  height:200px;
   background:radial-gradient(circle,rgba(0,100,255,0.4),transparent);
   border-radius:50%;
-  filter:blur(50px);
+  filter:blur(30px);
   animation:float 15s ease-in-out infinite;
 }
 .final-effects::after{
@@ -374,16 +428,16 @@ body{
   position:absolute;
   bottom:20%;
   right:10%;
-  width:250px;
-  height:250px;
+  width:150px;
+  height:150px;
   background:radial-gradient(circle,rgba(100,0,255,0.3),transparent);
   border-radius:50%;
-  filter:blur(50px);
+  filter:blur(30px);
   animation:float 20s ease-in-out infinite reverse;
 }
 @keyframes float{
   0%,100%{ transform:translateY(0) scale(1); }
-  50%{ transform:translateY(-20px) scale(1.1); }
+  50%{ transform:translateY(-15px) scale(1.1); }
 }
 
 /* QR код */
@@ -397,12 +451,16 @@ body{
   align-items:center;
   opacity:0;
   transition:all 1s cubic-bezier(0.34,1.56,0.64,1);
+  width:90%;
+  max-width:400px;
+  padding:20px;
+  box-sizing:border-box;
 }
 
 #qr{
-  width:220px;
-  height:220px;
-  margin-bottom:30px;
+  width:200px;
+  height:200px;
+  margin-bottom:25px;
   transform:translateY(-50px) scale(0.9);
   opacity:0;
   transition:all 1s cubic-bezier(0.34,1.56,0.64,1) 0.5s;
@@ -414,45 +472,52 @@ body{
 }
 
 #telegramLink{
-  font-size:18px;
+  font-size:16px;
   color:#8fefff;
   text-decoration:none;
-  margin-bottom:30px;
-  padding:14px 28px;
+  margin-bottom:25px;
+  padding:12px 24px;
   background:rgba(0,40,80,0.6);
-  border-radius:16px;
+  border-radius:14px;
   border:1px solid rgba(143,239,255,0.3);
   backdrop-filter:blur(10px);
   transform:translateY(-100px);
   opacity:0;
   transition:all 1s cubic-bezier(0.34,1.56,0.64,1) 1s;
+  text-align:center;
+  width:100%;
+  max-width:300px;
+  box-sizing:border-box;
 }
-#telegramLink:hover{
+#telegramLink:active{
   background:rgba(0,60,120,0.7);
-  border-color:rgba(143,239,255,0.6);
-  transform:translateY(-100px) scale(1.05);
 }
 
 #finalWish{
   max-width:400px;
-  font-size:16px;
-  line-height:1.8;
+  font-size:15px;
+  line-height:1.7;
   text-align:center;
   color:rgba(255,255,255,0.95);
-  padding:24px;
+  padding:20px;
   background:rgba(0,20,40,0.6);
-  border-radius:20px;
+  border-radius:18px;
   backdrop-filter:blur(10px);
   border:1px solid rgba(255,255,255,0.05);
   transform:translateY(-150px);
   opacity:0;
   transition:all 1s cubic-bezier(0.34,1.56,0.64,1) 1.5s;
+  width:100%;
+  box-sizing:border-box;
 }
 
 /* Сердечки */
 #heartsCanvas{
   position:fixed;
-  inset:0;
+  top:0;
+  left:0;
+  width:100%;
+  height:100%;
   pointer-events:none;
   z-index:55;
 }
@@ -460,24 +525,106 @@ body{
 /* Кнопка перезапуска */
 #restart{
   position:fixed;
-  right:30px;
-  bottom:30px;
-  padding:14px 28px;
-  border-radius:20px;
+  right:15px;
+  bottom:15px;
+  padding:12px 24px;
+  border-radius:18px;
   border:none;
   background:rgba(255,255,255,0.15);
   color:#fff;
-  font-size:16px;
+  font-size:14px;
   cursor:pointer;
   opacity:0;
   transition:all 0.4s ease;
   z-index:60;
   border:1px solid rgba(255,255,255,0.2);
   backdrop-filter:blur(10px);
+  -webkit-appearance:none;
+  touch-action:manipulation;
 }
-#restart:hover{
+#restart:active{
   background:rgba(255,255,255,0.25);
-  transform:scale(1.05);
+  transform:scale(0.98);
+}
+
+/* Медиа-запросы для мобильных */
+@media (max-width: 768px) {
+  .scene {
+    padding: 15px;
+  }
+  
+  .card {
+    height: min(70vh, 400px);
+  }
+  
+  .side {
+    padding: 20px;
+    border-radius: 15px;
+  }
+  
+  .card-content h1 {
+    font-size: clamp(24px, 7vw, 36px);
+  }
+  
+  .card-content p {
+    font-size: clamp(14px, 4vw, 18px);
+  }
+  
+  #telegramLink {
+    font-size: 14px;
+    padding: 10px 20px;
+  }
+  
+  #finalWish {
+    font-size: 14px;
+    padding: 15px;
+  }
+  
+  #qr {
+    width: 180px;
+    height: 180px;
+  }
+}
+
+@media (max-height: 600px) {
+  .card {
+    height: 80vh;
+  }
+  
+  .card-content {
+    margin-top: 20px;
+  }
+  
+  .card-content h1 {
+    margin-bottom: 10px;
+  }
+  
+  #qr {
+    width: 160px;
+    height: 160px;
+    margin-bottom: 15px;
+  }
+}
+
+/* Поддержка ориентации на мобильных */
+@media (orientation: landscape) and (max-height: 500px) {
+  .card {
+    height: 85vh;
+  }
+  
+  .card-content {
+    margin-top: 10px;
+  }
+  
+  .card-content h1 {
+    font-size: clamp(20px, 5vw, 30px);
+    margin-bottom: 8px;
+  }
+  
+  .card-content p {
+    font-size: clamp(12px, 3vw, 16px);
+    line-height: 1.4;
+  }
 }
 </style>
 </head>
@@ -491,7 +638,7 @@ body{
 
 <div id="start">
   <div id="browserNote">
-    <div style="font-size:20px;margin-bottom:10px;opacity:0.8;">🎄✨</div>
+    <div style="font-size:18px;margin-bottom:8px;opacity:0.8;">🎄✨</div>
     Для лучшего просмотра используйте:<br>
     <b style="color:#00eaff">Safari на iOS</b> или <b style="color:#00eaff">Chrome</b><br><br>
     🎧 Включите звук для полного погружения
@@ -543,8 +690,13 @@ body{
   id="cat" 
   playsinline 
   webkit-playsinline
-  preload="metadata"
+  preload="auto"
   muted
+  playsinline
+  webkit-playsinline
+  x5-playsinline
+  t7-playsinline
+  style="display:none;"
 ></video>
 
 <div id="videoLoader">🎬 Загрузка видео</div>
@@ -575,13 +727,13 @@ body{
 // ========== КОНФИГУРАЦИЯ ==========
 const CONFIG = {
   CARD_FLIP_TIME: 7000,
-  FIRST_CARD_DELAY: 2000, // Дополнительное время для первой карточки
+  FIRST_CARD_DELAY: 2000,
   FINAL_TEXT_DELAY: 1500,
   FLASH_DURATION: 3000,
   VIDEO_FADE_TIME: 9,
   FINAL_SCREEN_DELAY: 1000,
-  MAX_HEARTS: 35,
-  MAX_SNOWFLAKES: 120
+  MAX_HEARTS: 25,
+  MAX_SNOWFLAKES: 80
 };
 
 // ========== СОСТОЯНИЕ ==========
@@ -595,8 +747,17 @@ let state = {
   cardFlipTimeout: null,
   videoFadeStarted: false,
   musicPlaying: false,
-  firstCardShown: false
+  firstCardShown: false,
+  isMobile: false,
+  isIOS: false
 };
+
+// ========== ОПРЕДЕЛЕНИЕ УСТРОЙСТВА ==========
+function detectDevice() {
+  state.isMobile = /iPhone|iPad|iPod|Android/i.test(navigator.userAgent);
+  state.isIOS = /iPhone|iPad|iPod/i.test(navigator.userAgent);
+  console.log("Устройство:", state.isMobile ? "Мобильное" : "Десктоп", state.isIOS ? "(iOS)" : "");
+}
 
 // ========== ЭЛЕМЕНТЫ ==========
 const elements = {
@@ -635,8 +796,10 @@ const wishes = [
 
 // ========== ИНИЦИАЛИЗАЦИЯ СИСТЕМ ==========
 function initSystems() {
+  detectDevice();
   initSnow();
   initHearts();
+  preloadVideo();
 }
 
 // ========== СНЕГ ==========
@@ -649,15 +812,20 @@ function initSnow() {
     canvas.height = window.innerHeight;
   }
   resize();
-  window.addEventListener('resize', resize);
+  
+  let resizeTimeout;
+  window.addEventListener('resize', () => {
+    clearTimeout(resizeTimeout);
+    resizeTimeout = setTimeout(resize, 100);
+  });
   
   const flakes = Array.from({ length: CONFIG.MAX_SNOWFLAKES }, () => ({
     x: Math.random() * canvas.width,
     y: Math.random() * canvas.height,
-    r: Math.random() * 2 + 1,
-    v: Math.random() * 0.5 + 0.2,
-    o: Math.random() * 0.4 + 0.3,
-    sway: Math.random() * 0.5
+    r: Math.random() * 1.5 + 0.5,
+    v: Math.random() * 0.4 + 0.1,
+    o: Math.random() * 0.3 + 0.2,
+    sway: Math.random() * 0.3
   }));
   
   function draw() {
@@ -673,7 +841,7 @@ function initSnow() {
       f.x += Math.sin(f.y * 0.01) * f.sway;
       
       if (f.y > canvas.height) {
-        f.y = -10;
+        f.y = -5;
         f.x = Math.random() * canvas.width;
       }
       if (f.x > canvas.width) f.x = 0;
@@ -695,20 +863,25 @@ function initHearts() {
     canvas.height = window.innerHeight;
   }
   resize();
-  window.addEventListener('resize', resize);
+  
+  let resizeTimeout;
+  window.addEventListener('resize', () => {
+    clearTimeout(resizeTimeout);
+    resizeTimeout = setTimeout(resize, 100);
+  });
   
   function spawnHeart() {
     if (state.hearts.length >= CONFIG.MAX_HEARTS) return;
     
     state.hearts.push({
       x: Math.random() * canvas.width,
-      y: canvas.height + 30,
-      size: Math.random() * 0.4 + 0.2,
-      speed: Math.random() * 0.3 + 0.15,
+      y: canvas.height + 20,
+      size: Math.random() * 0.3 + 0.15,
+      speed: Math.random() * 0.2 + 0.1,
       color: `hsl(${Math.random() * 360}, 100%, 65%)`,
       life: 1,
       rotation: Math.random() * Math.PI * 2,
-      rotationSpeed: (Math.random() - 0.5) * 0.02
+      rotationSpeed: (Math.random() - 0.5) * 0.01
     });
   }
   
@@ -719,7 +892,7 @@ function initHearts() {
     ctx.scale(size, size);
     
     ctx.beginPath();
-    for (let a = 0; a < Math.PI * 2; a += 0.1) {
+    for (let a = 0; a < Math.PI * 2; a += 0.15) {
       const px = 16 * Math.pow(Math.sin(a), 3);
       const py = -(13 * Math.cos(a) - 5 * Math.cos(2*a) - 2 * Math.cos(3*a) - Math.cos(4*a));
       if (a === 0) ctx.moveTo(px, py);
@@ -737,20 +910,22 @@ function initHearts() {
     
     state.hearts.forEach((h, i) => {
       h.y -= h.speed;
-      h.life -= 0.002;
+      h.life -= 0.0015;
       h.rotation += h.rotationSpeed;
       
-      if (h.life <= 0 || h.y < -50) {
+      if (h.life <= 0 || h.y < -30) {
         state.hearts.splice(i, 1);
         return;
       }
       
+      ctx.save();
+      ctx.globalAlpha = h.life;
       ctx.shadowColor = h.color;
-      ctx.shadowBlur = 15 * h.life;
+      ctx.shadowBlur = 10 * h.life;
       drawHeart(h.x, h.y, h.size * h.life, h.rotation, h.color);
+      ctx.restore();
     });
     
-    ctx.shadowBlur = 0;
     requestAnimationFrame(draw);
   }
   draw();
@@ -759,15 +934,21 @@ function initHearts() {
 // ========== АУДИО СИСТЕМА ==========
 async function initAudio() {
   try {
+    if (state.audioContext) return true;
+    
     state.audioContext = new (window.AudioContext || window.webkitAudioContext)();
     if (state.audioContext.state === 'suspended') {
       await state.audioContext.resume();
     }
     
     // Загружаем звук флешки
-    const response = await fetch("flash.mp3");
-    const arrayBuffer = await response.arrayBuffer();
-    state.flashSound = await state.audioContext.decodeAudioData(arrayBuffer);
+    try {
+      const response = await fetch("flash.mp3");
+      const arrayBuffer = await response.arrayBuffer();
+      state.flashSound = await state.audioContext.decodeAudioData(arrayBuffer);
+    } catch (e) {
+      console.warn("Не удалось загрузить звук флешки");
+    }
     
     return true;
   } catch (error) {
@@ -777,36 +958,51 @@ async function initAudio() {
 }
 
 // ========== ВИДЕО СИСТЕМА ==========
-async function loadVideo() {
+async function preloadVideo() {
   return new Promise((resolve) => {
     if (state.videoLoaded) {
       resolve(true);
       return;
     }
     
-    elements.cat.src = "cat.mp4";
-    elements.cat.load();
+    // Для iOS сразу устанавливаем источник
+    if (state.isIOS) {
+      elements.cat.src = "cat.mp4";
+    }
     
     const onSuccess = () => {
       state.videoLoaded = true;
+      console.log("✅ Видео загружено");
       resolve(true);
     };
     
-    const onError = () => {
+    const onError = (e) => {
+      console.error("❌ Ошибка загрузки видео:", e);
       resolve(false);
     };
     
     elements.cat.addEventListener('loadeddata', onSuccess, { once: true });
     elements.cat.addEventListener('error', onError, { once: true });
     
-    setTimeout(() => resolve(false), 5000);
+    // Для не-iOS устройств загружаем сразу
+    if (!state.isIOS) {
+      elements.cat.src = "cat.mp4";
+      elements.cat.load();
+    }
+    
+    setTimeout(() => {
+      if (!state.videoLoaded) {
+        console.log("⚠️ Таймаут загрузки видео");
+        resolve(false);
+      }
+    }, 8000);
   });
 }
 
 async function playVideo() {
   if (!state.videoLoaded) {
     elements.videoLoader.style.opacity = 1;
-    const loaded = await loadVideo();
+    const loaded = await preloadVideo();
     if (!loaded) {
       elements.videoLoader.style.opacity = 0;
       return false;
@@ -814,43 +1010,87 @@ async function playVideo() {
   }
   
   try {
-    const isMobile = /iPhone|iPad|iPod|Android/i.test(navigator.userAgent);
+    // Для мобильных начинаем с muted
+    if (state.isMobile) {
+      elements.cat.muted = true;
+      elements.cat.volume = 0;
+    } else {
+      elements.cat.muted = false;
+      elements.cat.volume = 1;
+    }
     
-    // Очищаем muted и ставим громкость
-    elements.cat.muted = false;
-    elements.cat.volume = 1;
+    // Показываем видео элемент
+    elements.cat.style.display = 'block';
     
+    // Пытаемся запустить
     await elements.cat.play();
+    
     elements.videoLoader.style.opacity = 0;
     elements.cat.classList.add('playing');
+    
+    // Для мобильных включаем звук через 500ms
+    if (state.isMobile) {
+      setTimeout(() => {
+        try {
+          elements.cat.muted = false;
+          elements.cat.volume = 1;
+        } catch (e) {
+          console.log("Не удалось включить звук видео");
+        }
+      }, 500);
+    }
     
     setupVideoFadeout();
     return true;
   } catch (error) {
-    console.error("Ошибка воспроизведения видео:", error);
+    console.error("❌ Ошибка воспроизведения видео:", error);
     
-    // Пробуем с muted для мобильных
-    try {
-      const isMobile = /iPhone|iPad|iPod|Android/i.test(navigator.userAgent);
-      if (isMobile) {
-        elements.cat.muted = true;
-        await elements.cat.play();
+    // Пробуем альтернативный метод для мобильных
+    if (state.isMobile) {
+      try {
+        // Создаем кнопку для запуска видео
+        const playButton = document.createElement('button');
+        playButton.style.cssText = `
+          position: fixed;
+          top: 0;
+          left: 0;
+          width: 100%;
+          height: 100%;
+          opacity: 0;
+          z-index: 1000;
+          cursor: pointer;
+        `;
+        document.body.appendChild(playButton);
+        
+        const playPromise = new Promise((resolve) => {
+          playButton.addEventListener('click', async () => {
+            try {
+              await elements.cat.play();
+              elements.videoLoader.style.opacity = 0;
+              elements.cat.classList.add('playing');
+              playButton.remove();
+              resolve(true);
+            } catch (e) {
+              playButton.remove();
+              resolve(false);
+            }
+          }, { once: true });
+          
+          // Автоклик через небольшую задержку
+          setTimeout(() => {
+            playButton.click();
+          }, 100);
+        });
+        
+        return await playPromise;
+      } catch (e2) {
         elements.videoLoader.style.opacity = 0;
-        elements.cat.classList.add('playing');
-        
-        // Включаем звук через 500ms
-        setTimeout(() => {
-          elements.cat.muted = false;
-          elements.cat.volume = 1;
-        }, 500);
-        
-        setupVideoFadeout();
-        return true;
+        return false;
       }
-    } catch (e2) {
-      elements.videoLoader.style.opacity = 0;
-      return false;
     }
+    
+    elements.videoLoader.style.opacity = 0;
+    return false;
   }
 }
 
@@ -898,7 +1138,7 @@ function setupVideoFadeout() {
     elements.cat.style.opacity = 0;
     
     setTimeout(showFinalScreen, CONFIG.FINAL_SCREEN_DELAY);
-  });
+  }, { once: true });
 }
 
 // ========== КАРТОЧКИ ==========
@@ -948,10 +1188,7 @@ function flipCard() {
   
   if (state.cardFlipTimeout) clearTimeout(state.cardFlipTimeout);
   
-  // Время для следующей карточки зависит от того, первая ли она
-  const delay = state.currentCard === 1 && !state.firstCardShown ? 
-    CONFIG.FIRST_CARD_DELAY : CONFIG.CARD_FLIP_TIME;
-  
+  const delay = CONFIG.CARD_FLIP_TIME;
   state.cardFlipTimeout = setTimeout(flipCard, delay);
 }
 
@@ -1002,12 +1239,6 @@ async function playFlash() {
 function showFinalScreen() {
   elements.finalScreen.style.opacity = 1;
   
-  // Убираем лишний текст под QR
-  const qrImg = elements.qr.querySelector('img');
-  if (qrImg && qrImg.getAttribute('onerror')) {
-    qrImg.removeAttribute('onerror');
-  }
-  
   // Поочередное появление элементов с правильными трансформами
   setTimeout(() => {
     elements.qrContainer.style.opacity = 1;
@@ -1032,16 +1263,16 @@ function showFinalScreen() {
       if (state.hearts.length < CONFIG.MAX_HEARTS) {
         state.hearts.push({
           x: Math.random() * elements.heartsCanvas.width,
-          y: elements.heartsCanvas.height + 30,
-          size: Math.random() * 0.4 + 0.2,
-          speed: Math.random() * 0.3 + 0.15,
+          y: elements.heartsCanvas.height + 20,
+          size: Math.random() * 0.3 + 0.15,
+          speed: Math.random() * 0.2 + 0.1,
           color: `hsl(${Math.random() * 360}, 100%, 65%)`,
           life: 1,
           rotation: Math.random() * Math.PI * 2,
-          rotationSpeed: (Math.random() - 0.5) * 0.02
+          rotationSpeed: (Math.random() - 0.5) * 0.01
         });
       }
-    }, 250);
+    }, 300);
     
     // Кнопка перезапуска
     setTimeout(() => {
@@ -1071,27 +1302,26 @@ elements.startBtn.addEventListener('click', async function() {
   // Инициализация аудио
   await initAudio();
   
-  // Предзагрузка видео
-  loadVideo();
-  
   try {
     // Запуск музыки
-    const isMobile = /iPhone|iPad|iPod|Android/i.test(navigator.userAgent);
-    
-    // На мобильных начинаем с muted
-    if (isMobile) {
+    if (state.isMobile) {
       elements.music.muted = true;
       elements.music.volume = 0;
+    } else {
+      elements.music.muted = false;
+      elements.music.volume = 0.6;
     }
     
     await elements.music.play();
     state.musicPlaying = true;
     
     // Включаем звук после успешного запуска
-    setTimeout(() => {
-      elements.music.muted = false;
-      elements.music.volume = 0.6;
-    }, 300);
+    if (state.isMobile) {
+      setTimeout(() => {
+        elements.music.muted = false;
+        elements.music.volume = 0.6;
+      }, 300);
+    }
     
     // Плавное скрытие стартового экрана
     elements.start.style.opacity = 0;
@@ -1119,12 +1349,21 @@ window.addEventListener('load', () => {
   elements.music.load();
   
   // Обработка ресайза
+  let resizeTimeout;
   window.addEventListener('resize', () => {
-    elements.snowCanvas.width = window.innerWidth;
-    elements.snowCanvas.height = window.innerHeight;
-    elements.heartsCanvas.width = window.innerWidth;
-    elements.heartsCanvas.height = window.innerHeight;
+    clearTimeout(resizeTimeout);
+    resizeTimeout = setTimeout(() => {
+      elements.snowCanvas.width = window.innerWidth;
+      elements.snowCanvas.height = window.innerHeight;
+      elements.heartsCanvas.width = window.innerWidth;
+      elements.heartsCanvas.height = window.innerHeight;
+    }, 100);
   });
+  
+  // Добавляем обработчик касания для iOS
+  if (state.isIOS) {
+    document.addEventListener('touchstart', function() {}, { once: true });
+  }
 });
 </script>
 </body>
