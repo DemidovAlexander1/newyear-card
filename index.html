@@ -144,6 +144,45 @@ body{
   left:100%;
 }
 
+/* Индикатор загрузки видео на стартовом экране */
+#preloadProgress {
+  position: fixed;
+  bottom: 30px;
+  left: 50%;
+  transform: translateX(-50%);
+  width: 90%;
+  max-width: 400px;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 10px;
+  opacity: 0;
+  transition: opacity 0.3s ease;
+  z-index: 101;
+}
+
+.progress-bar {
+  width: 100%;
+  height: 6px;
+  background: rgba(255,255,255,0.1);
+  border-radius: 3px;
+  overflow: hidden;
+}
+
+.progress-fill {
+  height: 100%;
+  width: 0%;
+  background: linear-gradient(90deg, #00e0ff, #0088ff);
+  border-radius: 3px;
+  transition: width 0.3s ease;
+}
+
+#preloadStatus {
+  font-size: 14px;
+  color: rgba(255,255,255,0.8);
+  text-align: center;
+}
+
 /* Сцена с открыткой */
 .scene{
   width:100%;
@@ -336,7 +375,7 @@ body{
   transition:opacity 3s ease-out;
 }
 
-/* Видео - исправлено для мобильных */
+/* Видео */
 #cat{
   position:fixed;
   top:0;
@@ -367,25 +406,6 @@ body{
   z-index:36;
   pointer-events:none;
   transition:opacity 10s linear;
-}
-
-#videoLoader{
-  position:fixed;
-  top:50%;
-  left:50%;
-  transform:translate(-50%,-50%);
-  color:#fff;
-  font-size:18px;
-  opacity:0;
-  z-index:37;
-  pointer-events:none;
-  background:rgba(0,20,40,0.8);
-  padding:15px 30px;
-  border-radius:15px;
-  backdrop-filter:blur(10px);
-  border:1px solid rgba(255,255,255,0.1);
-  text-align:center;
-  white-space:nowrap;
 }
 
 /* Финальный экран */
@@ -584,6 +604,10 @@ body{
     width: 180px;
     height: 180px;
   }
+  
+  #preloadProgress {
+    bottom: 20px;
+  }
 }
 
 @media (max-height: 600px) {
@@ -605,27 +629,6 @@ body{
     margin-bottom: 15px;
   }
 }
-
-/* Поддержка ориентации на мобильных */
-@media (orientation: landscape) and (max-height: 500px) {
-  .card {
-    height: 85vh;
-  }
-  
-  .card-content {
-    margin-top: 10px;
-  }
-  
-  .card-content h1 {
-    font-size: clamp(20px, 5vw, 30px);
-    margin-bottom: 8px;
-  }
-  
-  .card-content p {
-    font-size: clamp(12px, 3vw, 16px);
-    line-height: 1.4;
-  }
-}
 </style>
 </head>
 
@@ -644,6 +647,14 @@ body{
     🎧 Включите звук для полного погружения
   </div>
   <button id="startBtn">✨ Открыть волшебство ✨</button>
+  
+  <!-- Индикатор загрузки видео -->
+  <div id="preloadProgress">
+    <div id="preloadStatus">Подготовка видео...</div>
+    <div class="progress-bar">
+      <div class="progress-fill"></div>
+    </div>
+  </div>
 </div>
 
 <div class="scene" id="scene">
@@ -699,7 +710,6 @@ body{
   style="display:none;"
 ></video>
 
-<div id="videoLoader">🎬 Загрузка видео</div>
 <div id="videoFade"></div>
 
 <div id="finalScreen">
@@ -749,15 +759,10 @@ let state = {
   musicPlaying: false,
   firstCardShown: false,
   isMobile: false,
-  isIOS: false
+  isIOS: false,
+  preloadStarted: false,
+  videoPreloaded: false
 };
-
-// ========== ОПРЕДЕЛЕНИЕ УСТРОЙСТВА ==========
-function detectDevice() {
-  state.isMobile = /iPhone|iPad|iPod|Android/i.test(navigator.userAgent);
-  state.isIOS = /iPhone|iPad|iPod/i.test(navigator.userAgent);
-  console.log("Устройство:", state.isMobile ? "Мобильное" : "Десктоп", state.isIOS ? "(iOS)" : "");
-}
 
 // ========== ЭЛЕМЕНТЫ ==========
 const elements = {
@@ -774,7 +779,6 @@ const elements = {
   whiteFlash: document.getElementById('whiteFlash'),
   cat: document.getElementById('cat'),
   videoFade: document.getElementById('videoFade'),
-  videoLoader: document.getElementById('videoLoader'),
   finalScreen: document.getElementById('finalScreen'),
   qrContainer: document.getElementById('qrContainer'),
   qr: document.getElementById('qr'),
@@ -783,7 +787,10 @@ const elements = {
   restart: document.getElementById('restart'),
   music: document.getElementById('music'),
   snowCanvas: document.getElementById('snow'),
-  heartsCanvas: document.getElementById('heartsCanvas')
+  heartsCanvas: document.getElementById('heartsCanvas'),
+  preloadProgress: document.getElementById('preloadProgress'),
+  preloadStatus: document.getElementById('preloadStatus'),
+  progressFill: document.querySelector('.progress-fill')
 };
 
 // ========== ПЖЕЛАНИЯ ==========
@@ -796,10 +803,17 @@ const wishes = [
 
 // ========== ИНИЦИАЛИЗАЦИЯ СИСТЕМ ==========
 function initSystems() {
-  detectDevice();
   initSnow();
   initHearts();
-  preloadVideo();
+  
+  // Определяем устройство
+  state.isMobile = /iPhone|iPad|iPod|Android/i.test(navigator.userAgent);
+  state.isIOS = /iPhone|iPad|iPod/i.test(navigator.userAgent);
+  
+  // Начинаем предзагрузку видео сразу при загрузке страницы
+  setTimeout(() => {
+    startVideoPreload();
+  }, 1000);
 }
 
 // ========== СНЕГ ==========
@@ -931,6 +945,96 @@ function initHearts() {
   draw();
 }
 
+// ========== ПРЕДЗАГРУЗКА ВИДЕО ==========
+function startVideoPreload() {
+  if (state.preloadStarted) return;
+  state.preloadStarted = true;
+  
+  elements.preloadProgress.style.opacity = 1;
+  elements.preloadStatus.textContent = "Подготовка видео...";
+  
+  // Устанавливаем источник видео
+  elements.cat.src = "cat.mp4";
+  
+  let lastTime = 0;
+  let lastLoaded = 0;
+  
+  // Обработчик прогресса загрузки
+  elements.cat.addEventListener('progress', () => {
+    if (elements.cat.buffered.length > 0) {
+      const bufferedEnd = elements.cat.buffered.end(elements.cat.buffered.length - 1);
+      const duration = elements.cat.duration || 1;
+      const progress = Math.min(bufferedEnd / duration, 1);
+      
+      // Обновляем прогресс бар
+      elements.progressFill.style.width = `${progress * 100}%`;
+      
+      // Обновляем статус
+      const percent = Math.round(progress * 100);
+      if (percent % 10 === 0 && percent !== lastLoaded) {
+        elements.preloadStatus.textContent = `Загрузка видео: ${percent}%`;
+        lastLoaded = percent;
+      }
+    }
+  });
+  
+  // Обработчик успешной загрузки
+  elements.cat.addEventListener('loadeddata', () => {
+    elements.progressFill.style.width = '100%';
+    elements.preloadStatus.textContent = "Видео готово!";
+    state.videoPreloaded = true;
+    state.videoLoaded = true;
+    
+    // Через 1 секунду скрываем индикатор
+    setTimeout(() => {
+      elements.preloadProgress.style.opacity = 0;
+    }, 1000);
+  });
+  
+  // Обработчик ошибок
+  elements.cat.addEventListener('error', (e) => {
+    console.error("Ошибка загрузки видео:", e);
+    elements.preloadStatus.textContent = "Ошибка загрузки видео";
+    elements.progressFill.style.background = "#ff3366";
+    
+    // Все равно продолжаем, но без видео
+    setTimeout(() => {
+      elements.preloadProgress.style.opacity = 0;
+    }, 2000);
+  });
+  
+  // Начинаем загрузку
+  elements.cat.load();
+  
+  // Таймаут на случай зависания
+  setTimeout(() => {
+    if (!state.videoPreloaded) {
+      elements.preloadStatus.textContent = "Пропустить предзагрузку";
+      elements.progressFill.style.width = '100%';
+      elements.progressFill.style.background = "#ff9900";
+      
+      // Кнопка пропуска
+      const skipBtn = document.createElement('button');
+      skipBtn.textContent = "Продолжить";
+      skipBtn.style.cssText = `
+        margin-top: 10px;
+        padding: 8px 16px;
+        background: rgba(255,255,255,0.2);
+        border: none;
+        border-radius: 8px;
+        color: white;
+        font-size: 14px;
+        cursor: pointer;
+      `;
+      skipBtn.onclick = () => {
+        elements.preloadProgress.style.opacity = 0;
+        skipBtn.remove();
+      };
+      elements.preloadProgress.appendChild(skipBtn);
+    }
+  }, 10000);
+}
+
 // ========== АУДИО СИСТЕМА ==========
 async function initAudio() {
   try {
@@ -957,54 +1061,41 @@ async function initAudio() {
   }
 }
 
-// ========== ВИДЕО СИСТЕМА ==========
-async function preloadVideo() {
-  return new Promise((resolve) => {
-    if (state.videoLoaded) {
-      resolve(true);
-      return;
-    }
-    
-    // Для iOS сразу устанавливаем источник
-    if (state.isIOS) {
-      elements.cat.src = "cat.mp4";
-    }
-    
-    const onSuccess = () => {
-      state.videoLoaded = true;
-      console.log("✅ Видео загружено");
-      resolve(true);
-    };
-    
-    const onError = (e) => {
-      console.error("❌ Ошибка загрузки видео:", e);
-      resolve(false);
-    };
-    
-    elements.cat.addEventListener('loadeddata', onSuccess, { once: true });
-    elements.cat.addEventListener('error', onError, { once: true });
-    
-    // Для не-iOS устройств загружаем сразу
-    if (!state.isIOS) {
-      elements.cat.src = "cat.mp4";
-      elements.cat.load();
-    }
-    
-    setTimeout(() => {
-      if (!state.videoLoaded) {
-        console.log("⚠️ Таймаут загрузки видео");
-        resolve(false);
-      }
-    }, 8000);
-  });
-}
-
+// ========== ВОСПРОИЗВЕДЕНИЕ ВИДЕО ==========
 async function playVideo() {
-  if (!state.videoLoaded) {
-    elements.videoLoader.style.opacity = 1;
-    const loaded = await preloadVideo();
-    if (!loaded) {
-      elements.videoLoader.style.opacity = 0;
+  if (!state.videoPreloaded) {
+    // Если видео не предзагружено, пытаемся запустить напрямую
+    try {
+      if (state.isMobile) {
+        elements.cat.muted = true;
+        elements.cat.volume = 0;
+      } else {
+        elements.cat.muted = false;
+        elements.cat.volume = 1;
+      }
+      
+      // Показываем видео элемент
+      elements.cat.style.display = 'block';
+      
+      await elements.cat.play();
+      elements.cat.classList.add('playing');
+      
+      // Для мобильных включаем звук через 500ms
+      if (state.isMobile) {
+        setTimeout(() => {
+          try {
+            elements.cat.muted = false;
+            elements.cat.volume = 1;
+          } catch (e) {
+            console.log("Не удалось включить звук видео");
+          }
+        }, 500);
+      }
+      
+      setupVideoFadeout();
+      return true;
+    } catch (error) {
+      console.error("❌ Ошибка воспроизведения видео:", error);
       return false;
     }
   }
@@ -1025,7 +1116,6 @@ async function playVideo() {
     // Пытаемся запустить
     await elements.cat.play();
     
-    elements.videoLoader.style.opacity = 0;
     elements.cat.classList.add('playing');
     
     // Для мобильных включаем звук через 500ms
@@ -1044,52 +1134,6 @@ async function playVideo() {
     return true;
   } catch (error) {
     console.error("❌ Ошибка воспроизведения видео:", error);
-    
-    // Пробуем альтернативный метод для мобильных
-    if (state.isMobile) {
-      try {
-        // Создаем кнопку для запуска видео
-        const playButton = document.createElement('button');
-        playButton.style.cssText = `
-          position: fixed;
-          top: 0;
-          left: 0;
-          width: 100%;
-          height: 100%;
-          opacity: 0;
-          z-index: 1000;
-          cursor: pointer;
-        `;
-        document.body.appendChild(playButton);
-        
-        const playPromise = new Promise((resolve) => {
-          playButton.addEventListener('click', async () => {
-            try {
-              await elements.cat.play();
-              elements.videoLoader.style.opacity = 0;
-              elements.cat.classList.add('playing');
-              playButton.remove();
-              resolve(true);
-            } catch (e) {
-              playButton.remove();
-              resolve(false);
-            }
-          }, { once: true });
-          
-          // Автоклик через небольшую задержку
-          setTimeout(() => {
-            playButton.click();
-          }, 100);
-        });
-        
-        return await playPromise;
-      } catch (e2) {
-        elements.videoLoader.style.opacity = 0;
-        return false;
-      }
-    }
-    
-    elements.videoLoader.style.opacity = 0;
     return false;
   }
 }
@@ -1230,6 +1274,7 @@ async function playFlash() {
   setTimeout(async () => {
     const success = await playVideo();
     if (!success) {
+      // Если видео не запустилось, переходим к финальному экрану
       setTimeout(showFinalScreen, 2000);
     }
   }, 500);
@@ -1302,6 +1347,11 @@ elements.startBtn.addEventListener('click', async function() {
   // Инициализация аудио
   await initAudio();
   
+  // Показываем статус предзагрузки
+  if (!state.videoPreloaded) {
+    elements.preloadStatus.textContent = "Запуск открытки...";
+  }
+  
   try {
     // Запуск музыки
     if (state.isMobile) {
@@ -1359,11 +1409,6 @@ window.addEventListener('load', () => {
       elements.heartsCanvas.height = window.innerHeight;
     }, 100);
   });
-  
-  // Добавляем обработчик касания для iOS
-  if (state.isIOS) {
-    document.addEventListener('touchstart', function() {}, { once: true });
-  }
 });
 </script>
 </body>
